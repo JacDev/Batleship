@@ -5,50 +5,88 @@ namespace Statki {
         PUSTE_POLE, WYBRANE_DO_USTAWIENIA = 41, W_POBLIZU, NIE_MOZNA_USTAWIC = 44,
         WYBRANE_DO_STRZALU = 46, JUZ_STRZELANO = 48, NIE_MOZNA_STRZELAC = 50, OKOLICA_ZATOPIONEGO = 51
     };
-    public sealed class Board {
-        private const int height = 10, width = 20;
-        private static Board _instance = null;
+    public enum Keys : int { LEFT, RIGHT, UP, DOWN, ENTER, ESCAPE, ROTATE, NONE};
+    public static class Board {
+        public const int height = 10, width = 20;
         private static int[,] _board;
         private static string _updown = new string(' ', width + 4);
         private static string _space = "\t\t\t\t\t\t";
-        private Board() {
-        }
-        public static Board Instance {
-            get {
-                if (_instance == null) {
-                    _instance = new Board();
-                    _board = new int[height, width];
-                    Console.BackgroundColor = ConsoleColor.Black;
-                }
-                return _instance;
+        public static bool IsInitialized { get; private set; }
+
+        public static void Init()
+        {
+            if (!IsInitialized)
+            {
+                IsInitialized = true;
+                _board = new int[height, width];
+                Console.BackgroundColor = ConsoleColor.Black;
             }
         }
-        public static int GetArea(int i, int j)
+        public static int GetArea(int i, int j, bool whichBoard)
         {
-            return _board[i, j];
+            if (IsInitialized)
+            {
+                int shift = whichBoard ? width / 2 : 0;
+                return _board[i, j + shift];
+            }
+            return -1;
         }
         public static void SetArea(int i, int j, int val, bool whichBoard)
         {
-            int shift = whichBoard ? width / 2 : 0;
-            _board[i, j + shift] = val;
+            if (IsInitialized)
+            {
+                int shift = whichBoard ? width / 2 : 0;
+                _board[i, j + shift] = val;
+            }
         }
         public static void SetAreaIf(int x, int y, int val, int condition, bool whichBoard)
         {
-            if (x >= 0 && x < width / 2 && y >= 0 && y < width / 2)
+            if (IsInitialized)
             {
-                int shift = whichBoard ? width / 2 : 0;
-                if (_board[x, y + shift] == condition)
-                    _board[x, y + shift] = val;
+                if (x >= 0 && x < width / 2 && y >= 0 && y < width / 2)
+                {
+                    int shift = whichBoard ? width / 2 : 0;
+                    if (_board[x, y + shift] == condition)
+                        _board[x, y + shift] = val;
+                }
+            }
+        }
+        public static Keys ReadKey()
+        {
+            var ch = Console.ReadKey(false).Key;
+            switch (ch)
+            {
+                case ConsoleKey.UpArrow:
+                    return Keys.UP;
+                case ConsoleKey.DownArrow:
+                    return Keys.DOWN;
+                case ConsoleKey.LeftArrow:
+                    return Keys.LEFT;
+                case ConsoleKey.RightArrow:
+                    return Keys.RIGHT;
+                case ConsoleKey.Enter:
+                    return Keys.ENTER;
+                case ConsoleKey.Escape:
+                    return Keys.ESCAPE;
+                case ConsoleKey.R:
+                    return Keys.ROTATE;
+                default:
+                    return Keys.NONE;
+
             }
         }
         public static void PrintBoard()
         {
-            PrintUpDown();
-            for (int i = 0; i < height; ++i)
+            if (IsInitialized)
             {
-                PrintLine(i);
+                Console.Clear();
+                PrintUpDown();
+                for (int i = 0; i < height; ++i)
+                {
+                    PrintLine(i);
+                }
+                PrintUpDown();
             }
-            PrintUpDown();
         }
         private static void PrintLine(int numb)
         {
@@ -123,22 +161,28 @@ namespace Statki {
 
         public static void ClearMarks()
         {
-            for (int i = 0; i < height; ++i)
+            if (IsInitialized)
             {
-                for (int j = 0; j < width; ++j)
+                for (int i = 0; i < height; ++i)
                 {
-                    if (_board[i,j] == (int)Marker.W_POBLIZU)
-                        _board[i, j] = (int)Marker.PUSTE_POLE;
+                    for (int j = 0; j < width; ++j)
+                    {
+                        if (_board[i, j] == (int)Marker.W_POBLIZU)
+                            _board[i, j] = (int)Marker.PUSTE_POLE;
+                    }
                 }
             }
         }
         public static void ClearBoard()
         {
-            for (int i = 0; i < height; ++i)
+            if (IsInitialized)
             {
-                for (int j = 0; j < width; ++j)
+                for (int i = 0; i < height; ++i)
                 {
-                    _board[i, j] = 0;
+                    for (int j = 0; j < width; ++j)
+                    {
+                        _board[i, j] = 0;
+                    }
                 }
             }
         }

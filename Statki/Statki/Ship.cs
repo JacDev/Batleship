@@ -5,10 +5,9 @@ namespace Statki
     class Ship
     {
         enum state : int { _missed, _hit, _sunk };
-        private int _coordX;
-        private int _coordY;
-        private int _left;
-        bool _whichBoard;
+        private readonly int _coordX;
+        private readonly int _coordY;
+        private readonly bool _whichBoard;
         public Ship (int icoordX, int icoordY, int isize, int ishipNumber, bool iisVertical, bool whichBoard)
         {
             _coordX = icoordX;
@@ -16,7 +15,7 @@ namespace Statki
             ShipNumber = ishipNumber;
             IsVertical = iisVertical;
             _whichBoard = whichBoard;
-            _left = isize;
+            Left = isize;
             GetShip = new int[isize, 2];
             MakeShip();
             DrawShip();
@@ -33,12 +32,12 @@ namespace Statki
                 GetShip[i, 1] = (int)state._missed;
             }
         }
-        public int Size { get => GetShip.Length;  }
+        public int Size { get => GetShip.GetLength(0);  }
         public bool IsSink { get => Left == 0; }
         public bool IsVertical { get; }
         public int ShipNumber { get; }
         public int[,] GetShip { get; }
-        public int Left { get => _left; }
+        public int Left { get; private set; }
 
         private void DrawShip()
         {
@@ -75,7 +74,7 @@ namespace Statki
                 if(GetShip[i,0] == hitArea)
                 {
                     GetShip[i, 1] = (int)state._hit;
-                    --_left;
+                    --Left;
                     if (Left == 0)
                         SinkShip();
                     DrawShip();
