@@ -8,8 +8,10 @@ namespace Statki
     {
         static void Main(string[] args)
         {
-            Board.Init();
-            Moves gracz = new PersonMoves(false);
+            Moves komp = new ComputerMoves(false);
+            //Moves gracz = new PersonMoves(true);
+
+            Board.Instance.PrintBoard();
         }
     }
 }
