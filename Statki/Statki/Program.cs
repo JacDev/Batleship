@@ -1,17 +1,21 @@
-﻿using System;
-using System.Text;
-using System.Threading;
-
-namespace Statki
+﻿namespace Statki
 {
     class Program
     {
         static void Main(string[] args)
         {
-            Moves komp = new ComputerMoves(false);
-            //Moves gracz = new PersonMoves(true);
+            Game game = new Game();
+            //Moves komp = new ComputerMoves(false);
+            //Moves gracz = new PersonMoves(true, komp);
+            //komp.Opponent = gracz;
 
-            Board.Instance.PrintBoard();
+            //while (komp.SunkenShips != 10 && gracz.SunkenShips != 10)
+            //{
+            //    komp.Shoot();
+            //    gracz.Shoot();
+            //}
+            //Window.Instance.PrintBoard();
+            //Window.Instance.ShowMenu();
         }
     }
 }

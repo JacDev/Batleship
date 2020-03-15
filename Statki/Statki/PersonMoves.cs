@@ -1,19 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
+﻿using System.Threading;
 
 namespace Statki
 {
     class PersonMoves : Moves
     {
-        public PersonMoves(bool boardNum) : base(boardNum, Players._PERSON)
+        public PersonMoves(bool boardNum, Moves opponent = null) : base(boardNum, Players.PERSON, opponent)
         {
-            AddShips();
-        }
-        public PersonMoves(bool boardNum, Moves opponent) : base(boardNum, Players._PERSON, opponent)
-        {
-            AddShips();
+            //AddShips();
+            AddShipsTest();
         }
 
         public override bool Shoot()
@@ -28,18 +22,18 @@ namespace Statki
                 do
                 {
                     canShoot = false;
-                    selectedField = Board.Instance[_x, _y, !_whichBoard];
+                    selectedField = Board.Instance[_x, _y, _opponentBoard];
                     if (selectedField >= 0 && selectedField <= 10)
                     {
-                        Board.Instance[_x, _y, !_whichBoard] = (int)Marker.WYBRANE_DO_STRZALU;
+                        Board.Instance[_x, _y, _opponentBoard] = (int)Marker.CHOSEN_TO_SHOOT;
                         canShoot = true;
                     }
                     else
                     {
-                        Board.Instance[_x, _y, !_whichBoard] = (int)Marker.NIE_MOZNA_STRZELAC;
+                        Board.Instance[_x, _y, _opponentBoard] = (int)Marker.CANNOT_SHOOT;
                     }
-                    Board.Instance.PrintBoard();
-                    Board.Instance[_x, _y, !_whichBoard] = selectedField;
+                    Window.Instance.PrintBoard();
+                    Board.Instance[_x, _y, _opponentBoard] = selectedField;
 
                     shoot = readKeyforShoot(ref _x, ref _y);
                     if (shoot == -1)
@@ -50,7 +44,7 @@ namespace Statki
 
                 if (selectedField > 0 && selectedField <= 10)
                 {
-                    if(_opponent.GetShip(selectedField-1).HitShip(_x, _y))
+                    if (_opponent.GetShip(selectedField - 1).HitShip(_x, _y))
                     {
                         ++_sunkenShips;
                         if (_sunkenShips == 10)
@@ -62,7 +56,7 @@ namespace Statki
                 }
                 else
                 {
-                    Board.Instance[_x, _y, !_whichBoard] = (int)Marker.JUZ_STRZELANO;
+                    Board.Instance[_x, _y, _opponentBoard] = (int)Marker.ALREADY_SHOT;
                 }
             } while (wasHit);
             return true;
@@ -73,23 +67,27 @@ namespace Statki
             bool isLoaded = false;
             while (!isLoaded)
             {
-                Keys key = Board.Instance.ReadKey();
+                Keys key = Window.Instance.ReadKey();
                 switch (key)
                 {
                     case Keys.DOWN:
-                        if (++x > 9) x = 0;
+                        if (++x > Board.HEIGHT - 1)
+                        { x = 0; }
                         isLoaded = true;
                         break;
                     case Keys.UP:
-                        if (--x < 0) x = 9;
+                        if (--x < 0)
+                        { x = Board.HEIGHT - 1; }
                         isLoaded = true;
                         break;
                     case Keys.RIGHT:
-                        if (++y > 9) y = 0;
+                        if (++y > Board.PLAYER_BOARD_WIDTH - 1)
+                        { y = 0; }
                         isLoaded = true;
                         break;
                     case Keys.LEFT:
-                        if (--y < 0) y = 9;
+                        if (--y < 0)
+                        { y = Board.PLAYER_BOARD_WIDTH - 1; }
                         isLoaded = true;
                         break;
                     case Keys.ESCAPE:
@@ -103,7 +101,18 @@ namespace Statki
             Thread.Sleep(100);
             return 0;
         }
-
+        private void AddShipsTest()
+        {
+            for (int i = 1; i < 6; i++)
+            {
+                _playerShips[i - 1] = new Ship(2 * (i - 1),0, 5, i, false, _whichBoard);
+            }
+            for (int i = 6; i <= 10; i++)
+            {
+                _playerShips[i - 1] = new Ship(2 * (i - 6), 6, 4, i, false, _whichBoard);
+            }
+            Board.Instance.ClearMarks();
+        }
         protected override void AddShips()
         {
             int shipNumb = 1;
@@ -114,7 +123,7 @@ namespace Statki
                 bool couldAdd = false;
                 bool isFit = true;
                 bool isVertical = false;
-                y = y + currSize - 1 > 9 ? 0 : y;
+                y = y + currSize - 1 > Board.PLAYER_BOARD_WIDTH - 1 ? 0 : y;
 
                 do
                 {
@@ -144,7 +153,7 @@ namespace Statki
         }
         private bool ReadKey(ref int x, ref int y, int currSize, ref bool isVertical)
         {
-            Keys key = Board.Instance.ReadKey();
+            Keys key = Window.Instance.ReadKey();
             switch (key)
             {
                 case Keys.DOWN:
@@ -198,7 +207,7 @@ namespace Statki
                 if (isVertical) ++j;
                 else ++i;
             }
-            Board.Instance.PrintBoard();
+            Window.Instance.PrintBoard();
             for (int i = 0, j = 0; i < currSize && j < currSize;)
             {
                 int c = isVertical ? j : i;

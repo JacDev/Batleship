@@ -52,7 +52,7 @@ namespace Statki
                 for (int j = -1; j < 2; ++j)
                 {
                     for (int k = -1; k < 2; ++k)
-                        Board.Instance.SetAreaIf(this[i].Item1 + k, this[i].Item2 + j, oznaczenie, (int)Marker.PUSTE_POLE, _whichBoard);
+                        Board.Instance.SetAreaIf(this[i].Item1 + k, this[i].Item2 + j, oznaczenie, (int)Marker.EMPTY_FIELD, _whichBoard);
                 }
             }
         }
