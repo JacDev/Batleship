@@ -92,7 +92,7 @@ namespace Statki
 		{
 			Board.Instance.ClearBoard();
 			Right = Left = null;
-
+			Events.Instance.ClearEvents();
 		}
 		private void ReadEnter()
 		{

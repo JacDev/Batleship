@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Statki
 {
-    public enum Keys : int { LEFT, RIGHT, UP, DOWN, ENTER, ESCAPE, ROTATE, NONE };
+    public enum Keys : int { LEFT, RIGHT, UP, DOWN, ENTER, ESCAPE, ROTATE, UNDO, CLEAR, NONE };
     class Window
     {
         private readonly string[] options = {
@@ -110,6 +110,7 @@ namespace Statki
                 case (int)Marker.EMPTY_FIELD:
                     break;
             }
+           // Console.Write(index + " ");
             Console.Write("  ");
         }
         public Keys ReadKey()
@@ -131,6 +132,10 @@ namespace Statki
                     return Keys.ESCAPE;
                 case ConsoleKey.R:
                     return Keys.ROTATE;
+                case ConsoleKey.U:
+                    return Keys.UNDO;
+                case ConsoleKey.C:
+                    return Keys.CLEAR;
                 default:
                     return Keys.NONE;
             }
