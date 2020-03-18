@@ -6,16 +6,15 @@ namespace Statki
 {
 	class ComputerMoves : Moves
 	{
-		private enum Directions { _DOWN = 0, _UP, _RIGHT, _LEFT };
+		private enum Directions { Down, Up, Right, Left };
 		private int dirOfShooting;
 		private bool[] chosenDir;
 		private int lastX, lastY;
 		private bool wasHitAfterDraw;
 		private bool wasHitAfterChoosingDir;
 		private bool sameDirection;
-		private int lastSelectedField;
 
-		public ComputerMoves(bool boardNum, Moves opponent = null) : base(boardNum, Players.COMPUTER, opponent)
+		public ComputerMoves(BoardSide boardNum, Moves opponent = null) : base(boardNum, Players.Computer, opponent)
 		{
 			AddShips();
 			chosenDir = Enumerable.Repeat(false, 4).ToArray();
@@ -27,9 +26,10 @@ namespace Statki
 			foreach (int currSize in _shipSize)
 			{
 				MakeShip(currSize, out int x, out int y, out bool isVertical);
-				PlayerShips[shipNumb - 1] = new Ship(x, y, currSize, shipNumb, isVertical, _whichBoard);
+				PlayerShips[shipNumb - 1] = new Ship(x, y, currSize, shipNumb, isVertical, WhichBoard);
 				++shipNumb;
 			}
+			Board.Instance.ClearMarks();
 		}
 
 		private void MakeShip(int size, out int x, out int y, out bool isVertical)
@@ -46,17 +46,16 @@ namespace Statki
 
 				int coord = isVertical ? x : y;
 				isFit = true;
-				if (coord + size > Board.HEIGHT)
+				if (coord + size > Board.Height)
 				{
-					x = isVertical ? 0 : x;
-					y = isVertical ? y : 0;
+					x = isVertical ? Board.UpperEdge : x;
+					y = isVertical ? y : Board.LeftEdge;
 				}
-
 				for (int i = 0; i < size; i++)
 				{
-					int px = isVertical ? i : 0;
-					int py = isVertical ? 0 : i;
-					if (Board.Instance[x + px, y + py, _whichBoard] != (int)Marker.EMPTY_FIELD)
+					int px = isVertical ? i : Board.UpperEdge;
+					int py = isVertical ? Board.LeftEdge : i;
+					if (Board.Instance[x + px, y + py, WhichBoard] != (int)Marker.EmptyField)
 					{
 						isFit = false;
 						break;
@@ -64,10 +63,9 @@ namespace Statki
 				}
 			}
 		}
-		public override bool Shoot()
+		public override Actions Shoot()
 		{
-			bool wasHit =  false;
-			
+			bool wasHit =  false;		
 			do
 			{
 				if (!wasHitAfterDraw)
@@ -75,10 +73,9 @@ namespace Statki
 					Random rnd = new Random();
 					do
 					{
-						lastX = _x = rnd.Next(Board.PLAYER_BOARD_WIDTH);
-						lastY = _y = rnd.Next(Board.HEIGHT);
-					} while ((lastSelectedField = Board.Instance[_x, _y, OpponentBoard]) > 10);
-					//lastSelectedField = Board.Instance[_x, _y, OpponentBoard];
+						lastX = _x = rnd.Next(Board.PlayerBoardWidth);
+						lastY = _y = rnd.Next(Board.Height);
+					} while (Board.Instance[_x, _y, OpponentBoard] > (int)Marker.LastShip);
 					wasHit = ShotAfterCoordDraw();
 				}
 				else
@@ -88,34 +85,32 @@ namespace Statki
 				}
 				if (_sunkenShips == 10)
 				{
-					return false;
+					return Actions.END_GAME;
 				}
 				Window.Instance.PrintBoard();
-				Events.Instance.AddShotEvent(lastX, lastY, lastSelectedField - 1, wasHit, this);
+
 				Thread.Sleep(1000);
 			} while (wasHit);
-			return true;
+			return Actions.MISSED;
 		}
 		private bool ShotAfterCoordDraw()
 		{
-			if (Board.Instance[lastX, lastY, OpponentBoard] != (int)Marker.EMPTY_FIELD)
-			{			
+			if (Board.Instance[lastX, lastY, OpponentBoard] != (int)Marker.EmptyField)
+			{
 				HitShip(true);
-				
 				return true;
 			}
 			else
 			{
-				Board.Instance[lastX, lastY, OpponentBoard] = (int)Marker.ALREADY_SHOT;
+				Board.Instance[lastX, lastY, OpponentBoard] = (int)Marker.AlreadyShot;
 				return false;
 			}
 		}
 		private bool ShotAfertDirDraw()
 		{
-			if (Board.Instance[lastX, lastY, OpponentBoard] != (int)Marker.EMPTY_FIELD)
+			if (Board.Instance[lastX, lastY, OpponentBoard] != (int)Marker.EmptyField)
 			{
-				HitShip(false);
-				
+				HitShip(false);				
 				return true;
 			}
 			else
@@ -135,7 +130,7 @@ namespace Statki
 					sameDirection = false;
 					chosenDir[dirOfShooting] = true;
 				}
-				Board.Instance[lastX, lastY, OpponentBoard] = (int)Marker.ALREADY_SHOT;
+				Board.Instance[lastX, lastY, OpponentBoard] = (int)Marker.AlreadyShot;
 				lastX = _x;
 				lastY = _y;
 				return false;
@@ -146,14 +141,14 @@ namespace Statki
 			chosenDir[dirOfShooting] = true;
 			switch (dirOfShooting)
 			{
-				case int i when (i == (int)Directions._UP || i == (int)Directions._DOWN):
+				case int i when (i == (int)Directions.Up || i == (int)Directions.Down):
 					{
-						dirOfShooting = dirOfShooting == (int)Directions._UP ? (int)Directions._DOWN : (int)Directions._UP;
+						dirOfShooting = dirOfShooting == (int)Directions.Up ? (int)Directions.Down : (int)Directions.Up;
 						break;
 					}
-				case int i when (i == (int)Directions._RIGHT || i == (int)Directions._LEFT):
+				case int i when (i == (int)Directions.Right || i == (int)Directions.Left):
 					{
-						dirOfShooting = dirOfShooting == (int)Directions._RIGHT ? (int)Directions._LEFT : (int)Directions._RIGHT;
+						dirOfShooting = dirOfShooting == (int)Directions.Right ? (int)Directions.Left : (int)Directions.Right;
 						break;
 					}
 			}
@@ -172,7 +167,7 @@ namespace Statki
 					} while (chosenDir[dirOfShooting]);
 				}
 				isOutsideBoard = GoTowards();
-				if (Board.Instance[lastX, lastY, OpponentBoard] > 10 || isOutsideBoard)
+				if (Board.Instance[lastX, lastY, OpponentBoard] > (int)Marker.LastShip || isOutsideBoard)
 				{
 					lastX = _x;
 					lastY = _y;
@@ -189,26 +184,26 @@ namespace Statki
 		{
 			switch (dirOfShooting)
 			{
-				case int i when (i == (int)Directions._RIGHT || i == (int)Directions._DOWN):
+				case int i when (i == (int)Directions.Right || i == (int)Directions.Down):
 					{
-						int coord = dirOfShooting == (int)Directions._DOWN ? lastX : lastY;
-						if (coord + 1 > Board.PLAYER_BOARD_WIDTH - 1)
+						int coord = dirOfShooting == (int)Directions.Down ? lastX : lastY;
+						if (coord + 1 > Board.LowerEdge)
 							return true;
 						else
 							coord += 1;
-						lastX = dirOfShooting == (int)Directions._DOWN ? coord : lastX;
-						lastY = dirOfShooting == (int)Directions._DOWN ? lastY : coord;
+						lastX = dirOfShooting == (int)Directions.Down ? coord : lastX;
+						lastY = dirOfShooting == (int)Directions.Down ? lastY : coord;
 						break;
 					}
-				case int i when (i == (int)Directions._LEFT || i == (int)Directions._UP):
+				case int i when (i == (int)Directions.Left || i == (int)Directions.Up):
 					{
-						int coord = dirOfShooting == (int)Directions._UP ? lastX : lastY;
-						if (coord - 1 < 0)
+						int coord = dirOfShooting == (int)Directions.Up ? lastX : lastY;
+						if (coord - 1 < Board.LeftEdge)
 							return true;
 						else
 							coord -= 1;
-						lastX = dirOfShooting == (int)Directions._UP ? coord : lastX;
-						lastY = dirOfShooting == (int)Directions._UP ? lastY : coord;
+						lastX = dirOfShooting == (int)Directions.Up ? coord : lastX;
+						lastY = dirOfShooting == (int)Directions.Up ? lastY : coord;
 						break;
 					}
 			}
@@ -217,7 +212,7 @@ namespace Statki
 		private void HitShip(bool isAfterDraw)
 		{
 			int numbOfHitShip = Board.Instance[lastX, lastY, OpponentBoard];
-			if (Opponent.GetShip(numbOfHitShip - 1).HitShip(lastX, lastY))
+			if (Opponent.PlayerShips[numbOfHitShip - 1].HitShip(lastX, lastY, isComputer: true))
 			{
 				if (!isAfterDraw)
 				{

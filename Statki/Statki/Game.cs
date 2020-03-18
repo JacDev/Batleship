@@ -3,10 +3,13 @@ using System.Threading;
 
 namespace Statki
 {
+	enum Actions : int { BACK_TO_MENU = -1, MISSED, END_GAME, UNDO }
+
 	class Game
 	{
 		private int chosenOption;
-		private Moves Left = null, Right = null;
+		private Moves leftPlayer = null, rightPlayer = null;
+		private BoardSide whoseTurn;
 		public Game()
 		{
 			MakeGame();
@@ -23,20 +26,23 @@ namespace Statki
 					case 0:
 						{
 							EndCurrentGame();
-							Left = new PersonMoves(false);
-							Right = new ComputerMoves(true, Left);
-							Left.Opponent = Right;
+							Window.Instance.PrintBoard();
+							leftPlayer = new PersonMoves(BoardSide.Left);
+							rightPlayer = new ComputerMoves(BoardSide.Right, leftPlayer);
+							leftPlayer.Opponent = rightPlayer;
 							Window.Instance.CanLoadGame = true;
+							whoseTurn = BoardSide.Left;
 							endGame = Play();
 							break;
 						}
 					case 1:
 						{
 							EndCurrentGame();
-							Left = new PersonMoves(false);
-							Right = new PersonMoves(true, Left);
-							Left.Opponent = Right;
+							leftPlayer = new PersonMoves(BoardSide.Left);
+							rightPlayer = new ComputerMoves(BoardSide.Right, leftPlayer);
+							leftPlayer.Opponent = rightPlayer;
 							Window.Instance.CanLoadGame = true;
+							whoseTurn = BoardSide.Left;
 							endGame = Play();
 							break;
 						}
@@ -68,35 +74,34 @@ namespace Statki
 		{
 			while (true)
 			{
-				if (!Left.Shoot() || !Right.Shoot())
+				Moves currentPlayer = whoseTurn == BoardSide.Left ? leftPlayer : rightPlayer;
+				whoseTurn = whoseTurn == BoardSide.Left ? BoardSide.Right : BoardSide.Left;
+				Actions currentPlayerAction = currentPlayer.Shoot();
+
+				if (currentPlayerAction == Actions.END_GAME)
 				{
-					if (Left.SunkenShips == 10 || Right.SunkenShips == 10)
-					{
-						break;
-					}
-					else
-					{
-						return false;
-					}
+					break;
+				}
+				else if (currentPlayerAction == Actions.BACK_TO_MENU)
+				{
+					return false;
 				}
 			}
-			//planszaGry->setCzyJuzUstawilPierwszy(false);
-			//planszaGry->setCzyJuzUstawilDrugi(false);
+
 			Window.Instance.PrintBoard();
 			Console.Write(("").PadRight(40, ' '));
-			Console.WriteLine("Press ENTER to continue\n");
 			ReadEnter();
 			return true;
 		}
 		private void EndCurrentGame()
 		{
 			Board.Instance.ClearBoard();
-			Right = Left = null;
-			Events.Instance.ClearEvents();
+			rightPlayer = leftPlayer = null;
 		}
-		private void ReadEnter()
+		public void ReadEnter()
 		{
-			while (Window.Instance.ReadKey()!=Keys.ENTER) ;
+			Console.WriteLine("Press ENTER to continue\n");
+			while (Window.Instance.ReadKey() != Keys.Enter) ;
 			Thread.Sleep(200);
 		}
 	}

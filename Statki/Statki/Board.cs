@@ -1,90 +1,95 @@
 ﻿using System;
 
 namespace Statki {
-    public enum Marker : int {
-        EMPTY_FIELD, CHOSEN_TO_ADD = 41, NEAR_SHIP, CANNOT_ADD = 44,
-        CHOSEN_TO_SHOOT = 46, ALREADY_SHOT = 48, CANNOT_SHOOT = 50, NEAR_SUNKEN_SHIP = 51
-    };
+	enum Marker : int { EmptyField = 0, FirstShip = 1, LastShip = 10, FirstHitShip, LastHitShip = 20, FirstSunkShip, LastSunkShip = 30,
+		ChosenToAdd, NearShip, CannotAdd, ChosenToShoot, AlreadyShot, CannotShoot, NearSunkenShip
+	};
 
-    public sealed class Board
-    {
-        private static readonly Board _Instance = new Board();
+	public sealed class Board
+	{
+		private static readonly Board _Instance = new Board();
+		private enum Shift : int { None, NextBoard = 10 };
+		public const int Height = 10, Width = 20;
+		public const int PlayerBoardWidth = Width / 2;
+		public const int LeftEdge = 0, UpperEdge = 0;
+		public const int RightEdge = 9, LowerEdge = 9;
+		private int[,] _board;
 
-        public const int HEIGHT = 10, WIDTH = 20, PLAYER_BOARD_WIDTH = WIDTH/2;
-        private int[,] _board;
-
-        private Board()
-        {
-            _board = new int[HEIGHT, WIDTH];
-        }
-        public static Board Instance
-        {
-            get
-            {
-                return _Instance;
-            }
-        }
-        public int this[int indx, int indy, bool whichBoard = false]
-        {
-            get
-            {
-                if (indx >= 0 && indx < HEIGHT && indy >= 0 && indy < WIDTH)
-                {
-                    int shift = whichBoard ? WIDTH / 2 : 0;
-                    return _board[indx, indy + shift];
-                }
-                return -1;
-            }
-            set
-            {
-                if (indx >= 0 && indx < HEIGHT && indy >= 0 && indy < WIDTH)
-                {
-                    int shift = whichBoard ? WIDTH / 2:0;
-                    _board[indx, indy + shift] = value;
-                }
-            }
-        }
-
-        public void Init()
-        {
-            Console.BackgroundColor = ConsoleColor.Black;
-        }
-        public int GetArea(int i, int j, bool whichBoard)
-        {
-            return this[i, j, whichBoard];
-        }
-        public void SetArea(int x, int y, int val, bool whichBoard)
-        {
-            this[x, y, whichBoard] = val;
-        }
-        public void SetAreaIf(int x, int y, int val, int condition, bool whichBoard)
-        {
-            if (x >= 0 && x < WIDTH / 2 && y >= 0 && y < WIDTH / 2)
-            {
-                if (this[x, y, whichBoard] == condition)
-                    this[x, y, whichBoard] = val;
-            }
-        }
-        public void ClearMarks()
-        {
-            for (int x = 0; x < HEIGHT; ++x)
-            {
-                for (int y = 0; y < WIDTH; ++y)
-                {
-                    if (this[x, y] == (int)Marker.NEAR_SHIP)
-                        this[x, y] = (int)Marker.EMPTY_FIELD;
-                }
-            }
-        }
-        public void ClearBoard()
-        {
-            for (int x = 0; x < HEIGHT; ++x)
-            {
-                for (int y = 0; y < WIDTH; ++y)
-                {
-                    this[x, y] = (int)Marker.EMPTY_FIELD;
-                }
-            }
-        }
-    }
+		private Board()
+		{
+			_board = new int[Height, Width];
+			Console.BackgroundColor = ConsoleColor.Black;
+		}
+		public static Board Instance
+		{
+			get
+			{
+				return _Instance;
+			}
+		}
+		public int this[int indx, int indy, BoardSide whichBoard = BoardSide.Left]
+		{
+			get
+			{
+				int shift = whichBoard == BoardSide.Right ? (int)Shift.NextBoard : (int)Shift.None;
+				if (IsInBoard(indx, indy + shift)) 
+				{ 
+					return _board[indx, indy + shift];
+				}
+				return -1; //add throwing exception
+			}
+			set
+			{
+				int shift = whichBoard == BoardSide.Right ? (int)Shift.NextBoard : (int)Shift.None;
+				if (IsInBoard(indx, indy + shift))
+				{ 
+					_board[indx, indy + shift] = value;
+				}
+			}
+		}
+		private bool IsInBoard(int indx, int indy)
+		{
+			if (indx >= UpperEdge && indx <= LowerEdge && indy >= LeftEdge && indy <= Width)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		public void SetAreaIf(int x, int y, int val, int condition, BoardSide whichBoard)
+		{
+			if (x >= UpperEdge && x <= LowerEdge && y >= LeftEdge && y <= RightEdge)
+			{
+				if (this[x, y, whichBoard] == condition)
+				{
+					this[x, y, whichBoard] = val;
+				}
+			}
+		}
+		public void ClearMarks()
+		{
+			for (int x = 0; x < Height; ++x)
+			{
+				for (int y = 0; y < Width; ++y)
+				{
+					if (this[x, y] == (int)Marker.NearShip)
+					{
+						this[x, y] = (int)Marker.EmptyField;
+					}
+				}
+			}
+		}
+		public void ClearBoard()
+		{
+			for (int x = 0; x < Height; ++x)
+			{
+				for (int y = 0; y < Width; ++y)
+				{
+					this[x, y] = (int)Marker.EmptyField;
+				}
+			}
+		}
+	}
 }
