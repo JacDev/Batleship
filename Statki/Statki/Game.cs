@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
 
 namespace Statki
@@ -49,7 +50,9 @@ namespace Statki
 					case 2:
 						{
 							EndCurrentGame();
-							//LoadGame
+							LoadGame();
+							endGame = Play();
+							Window.Instance.CanLoadGame = true;
 							break;
 						}
 					case 3:
@@ -64,7 +67,7 @@ namespace Statki
 						}
 					case 5:
 						{
-							//SaveGame
+							SaveGame();
 							break;
 						}
 				}
@@ -75,9 +78,7 @@ namespace Statki
 			while (true)
 			{
 				Moves currentPlayer = whoseTurn == BoardSide.Left ? leftPlayer : rightPlayer;
-				whoseTurn = whoseTurn == BoardSide.Left ? BoardSide.Right : BoardSide.Left;
-				Actions currentPlayerAction = currentPlayer.Shoot();
-
+				Actions currentPlayerAction = currentPlayer.Shoot();			
 				if (currentPlayerAction == Actions.END_GAME)
 				{
 					break;
@@ -85,6 +86,10 @@ namespace Statki
 				else if (currentPlayerAction == Actions.BACK_TO_MENU)
 				{
 					return false;
+				}
+				else
+				{
+					whoseTurn = whoseTurn == BoardSide.Left ? BoardSide.Right : BoardSide.Left;
 				}
 			}
 
@@ -103,6 +108,67 @@ namespace Statki
 			Console.WriteLine("Press ENTER to continue\n");
 			while (Window.Instance.ReadKey() != Keys.Enter) ;
 			Thread.Sleep(200);
+		}
+		private void SaveGame()
+		{
+			string directory = Directory.GetCurrentDirectory();
+			Console.WriteLine(directory);
+			using (StreamWriter outputFile = File.CreateText(Path.Combine(directory, "savedGame.txt")))
+			{
+				outputFile.WriteLine(leftPlayer.IsPerson().ToString() + " " + rightPlayer.IsPerson().ToString() + " " + leftPlayer.SunkenShips + " " + rightPlayer.SunkenShips + " " + whoseTurn.ToString() + " ");
+				outputFile.WriteLine(leftPlayer.GetShipsAsString() + rightPlayer.GetShipsAsString() + Board.Instance.GetBoardAsString());
+				outputFile.Close();
+			}
+		}
+		private bool LoadGame()
+		{
+			string directory = Directory.GetCurrentDirectory();
+			string inputFilePath = Path.Combine(directory, "savedGame.txt");
+			if (File.Exists(inputFilePath))
+			{
+				StreamReader inputFile = File.OpenText(inputFilePath);
+				string game = inputFile.ReadToEnd();
+				inputFile.Close();
+				StringReader reader = new StringReader(game);
+				LoadPlayers(reader.ReadLine());
+
+				for (int i = 0; i < 10; ++i)
+				{
+					leftPlayer.AddShipAfterLoadGame(reader.ReadLine(), i + 1);
+				}
+				for (int i = 0; i < 10; ++i)
+				{
+					rightPlayer.AddShipAfterLoadGame(reader.ReadLine(), i + 1);
+				}
+				Board.Instance.LoadBoard(reader.ReadToEnd());
+				return true;
+			}
+			return false;
+		}
+		private void LoadPlayers(string line)
+		{
+			char separator = ' ';
+			string[] substrings = line.Split(separator);
+
+			leftPlayer = MakePlayer(substrings[0], BoardSide.Left);
+			rightPlayer = MakePlayer(substrings[1], BoardSide.Right);
+			leftPlayer.Opponent = rightPlayer;
+			rightPlayer.Opponent = leftPlayer;
+
+			leftPlayer.SunkenShips = Convert.ToInt32(substrings[2]);
+			rightPlayer.SunkenShips = Convert.ToInt32(substrings[3]);
+			whoseTurn = substrings[4] == "Left"? BoardSide.Left : BoardSide.Right;
+		}
+		private Moves MakePlayer(string isPerson, BoardSide side)
+		{
+			if(isPerson == "True")
+			{
+				return new PersonMoves(side, afterLoad: true);
+			}
+			else
+			{
+				return new ComputerMoves(side, afterLoad: true);			
+			}
 		}
 	}
 }

@@ -14,9 +14,12 @@ namespace Statki
 		private bool wasHitAfterChoosingDir;
 		private bool sameDirection;
 
-		public ComputerMoves(BoardSide boardNum, Moves opponent = null) : base(boardNum, Players.Computer, opponent)
+		public ComputerMoves(BoardSide boardNum, Moves opponent = null, bool afterLoad = false) : base(boardNum, Players.Computer, opponent)
 		{
-			AddShips();
+			if (!afterLoad)
+			{
+				AddShips();
+			}
 			chosenDir = Enumerable.Repeat(false, 4).ToArray();
 		}
 
@@ -83,7 +86,7 @@ namespace Statki
 					ChooseDir();
 					wasHit = ShotAfertDirDraw();
 				}
-				if (_sunkenShips == 10)
+				if (SunkenShips == 10)
 				{
 					return Actions.END_GAME;
 				}
@@ -223,7 +226,7 @@ namespace Statki
 					}
 				}
 
-				++_sunkenShips;
+				++SunkenShips;
 			}
 			else if (!isAfterDraw)
 			{

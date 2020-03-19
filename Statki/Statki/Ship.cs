@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 
 namespace Statki
 {
@@ -26,6 +27,40 @@ namespace Statki
 			MakeShip();
 			DrawShip();
 			MarkNeighborhood(false);
+		}
+		public Ship(string line, int shipNumber, BoardSide whichBoard)
+		{
+			char separator = ' ';
+			string[] substrings = line.Split(separator);
+			_coordX = Convert.ToInt32(substrings[0]);
+			_coordY = Convert.ToInt32(substrings[1]);
+			_isVertical = Convert.ToBoolean(substrings[2] == "True");
+			_left = Convert.ToInt32(substrings[3]);
+			_size = Convert.ToInt32(substrings[4]);
+			_shipCoord = new int[_size, 2];
+			_whichBoard = whichBoard;
+			_shipNumber = shipNumber;
+			MakeShip();
+			for(int i = 0; i < _size; ++i)
+			{
+				_shipCoord[i, 1] = Convert.ToInt32(substrings[5 + i]);
+			}
+			DrawShip();
+			MarkNeighborhood(false);
+		}
+		public string GetShipAsString()
+		{
+			return new string(_coordX.ToString() + " " + _coordY.ToString() + " " + _isVertical.ToString() +
+			" " + _left.ToString() + " " + _size.ToString() + " " + GetShipCoordAsString());
+		}
+		private string GetShipCoordAsString()
+		{
+			StringBuilder result = new StringBuilder(string.Empty);
+			for (int j = 0; j < _size; j++)
+			{
+				result.Append(_shipCoord[j, 1].ToString() + " ");
+			}
+			return result.ToString();
 		}
 		public void UndoAdded()
 		{

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 
 namespace Statki {
 	enum Marker : int { EmptyField = 0, FirstShip = 1, LastShip = 10, FirstHitShip, LastHitShip = 20, FirstSunkShip, LastSunkShip = 30,
@@ -44,6 +45,30 @@ namespace Statki {
 				if (IsInBoard(indx, indy + shift))
 				{ 
 					_board[indx, indy + shift] = value;
+				}
+			}
+		}
+		public string GetBoardAsString()
+		{
+			StringBuilder result = new StringBuilder(string.Empty);
+			for (int i = 0; i < Height; i++)
+			{
+				for (int j = 0; j < Width; j++)
+				{
+					result.Append(this[i, j].ToString() + " ");
+				}
+			}
+			return result.ToString();
+		}
+		public void LoadBoard(string line)
+		{
+			char separator = ' ';
+			string[] substrings = line.Split(separator);
+			for (int i = 0; i < Height; ++i)
+			{
+				for(int j = 0; j < Width; ++j)
+				{
+					this[i, j] = Convert.ToInt32(substrings[i * Width + j]);
 				}
 			}
 		}

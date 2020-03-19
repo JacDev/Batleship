@@ -35,10 +35,13 @@ namespace Statki
 		}
 		private enum LoadedAction : int { BackToMenu = -1, DontShot, Shot, Undo }
 		private Stack<ShotEvent> shots;
-		public PersonMoves(BoardSide boardNum, Moves opponent = null) : base(boardNum, Players.Person, opponent)
+		public PersonMoves(BoardSide boardNum, Moves opponent = null, bool afterLoad = false) : base(boardNum, Players.Person, opponent)
 		{
-			//AddShips();
-			AddShipsTest();
+			if (!afterLoad)
+			{
+				//AddShips();
+				AddShipsTest();
+			}
 			shots = new Stack<ShotEvent>();
 		}
 		public override Actions Shoot()
@@ -97,8 +100,8 @@ namespace Statki
 			{
 				if (Opponent.PlayerShips[selectedField - 1].HitShip(_x, _y))
 				{
-					++_sunkenShips;
-					if (_sunkenShips == 10)
+					++SunkenShips;
+					if (SunkenShips == 10)
 					{
 						return true;
 					}
