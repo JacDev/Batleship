@@ -4,9 +4,9 @@ using System.Threading;
 namespace Statki
 {
 	enum Keys : int { Left, Right, Up, Down, Enter, Escape, Rotate, Undo, Clear, None };
-	class Window
+	static class Window
 	{
-		private readonly string[] _options = {
+		private static readonly string[] _options = {
 	/*0*/"GRA Z KOMPUTEREM",
 	/*1*/"GRA Z PRZECIWNIKIEM",
 	/*2*/"WCZYTAJ GRE",
@@ -14,57 +14,48 @@ namespace Statki
 	/*4*/"KONTYNUUJ GRE",
 	/*5*/"ZAPISZ GRE"
 		};
-		private string _space = "\t\t\t\t\t\t";
-		private string _updown = new string(' ', Board.Width + 4);
-		public bool CanLoadGame { get; set; }
+		private static string _space = "\t\t\t\t\t\t";
+		private static string _updown = new string(' ', 24);
+		public static bool CanLoadGame { get; set; }
 
-		private static readonly Window _Instance = new Window();
-		private int _chosenOption;
-		private bool _isHighlighted = true;
+		private static int _chosenOption;
+		private static bool _isHighlighted = true;
 
-		private Window()
-		{
-		}
-		public static Window Instance
-		{
-			get
-			{
-				return _Instance;
-			}
-		}
-		public void PrintBoard()
+		public static void PrintBoard(Moves leftBoard, Moves rightBoard)
 		{
 			Console.Clear();
+			Console.BackgroundColor = ConsoleColor.Black;
 			PrintUpDown();
-			for (int x = 0; x < Board.Height; ++x)
+			for (int x = 0; x < Moves.Height; ++x)
 			{
-				PrintLine(x);
+				PrintLine(x, leftBoard, rightBoard);
 			}
 			PrintUpDown();
 		}
-		private void PrintLine(int line)
+		private static void PrintLine(int line, Moves leftBoard, Moves rightBoard)
 		{
 			PrintFrame();
-			for (int y = 0; y < Board.Width; ++y)
+			for (int y = 0; y < Moves.Width; ++y)
 			{
-				PrintShipArea(Board.Instance[line, y]);
-				if (y == Board.RightEdge)
-				{
-					PrintFrame();
-					Console.Write("{0}", _space);
-					PrintFrame();
-				}
+				PrintShipArea(leftBoard[line, y]);
+			}
+			PrintFrame();
+			Console.Write("{0}", _space);
+			PrintFrame();
+			for (int y = 0; y < Moves.Width; ++y)
+			{
+				PrintShipArea(rightBoard[line, y]);
 			}
 			PrintFrame();
 			Console.WriteLine();
 		}
-		private void PrintFrame()
+		private static void PrintFrame()
 		{
 			Console.BackgroundColor = ConsoleColor.White;
 			Console.Write("  ");
 			Console.BackgroundColor = ConsoleColor.Black;
 		}
-		private void PrintUpDown()
+		private static void PrintUpDown()
 		{
 			Console.BackgroundColor = ConsoleColor.White;
 			Console.Write(_updown);
@@ -74,7 +65,7 @@ namespace Statki
 			Console.WriteLine(_updown);
 			Console.BackgroundColor = ConsoleColor.Black;
 		}
-		private void PrintShipArea(int index)
+		private static void PrintShipArea(int index)
 		{
 			Console.BackgroundColor = ConsoleColor.Black;
 			switch (index)
@@ -108,12 +99,13 @@ namespace Statki
 					break;
 				case (int)Marker.NearSunkenShip:
 				case (int)Marker.EmptyField:
+					Console.BackgroundColor = ConsoleColor.Cyan;
 					break;
 			}
 			//Console.Write(index + " "); //for debuging
 			Console.Write("  ");
 		}
-		public Keys ReadKey()
+		public static Keys ReadKey()
 		{
 			ConsoleKey key = Console.ReadKey(false).Key;
 			switch (key)
@@ -140,12 +132,12 @@ namespace Statki
 					return Keys.None;
 			}
 		}
-		public int ShowMenu()
+		public static int ShowMenu()
 		{
 			while (ShowMenuOptions()) ;
 			return _chosenOption;
 		}
-		private bool ShowMenuOptions()
+		private static bool ShowMenuOptions()
 		{
 			Console.Clear();
 			int menuSize = CanLoadGame ? _options.Length : _options.Length - 2;
@@ -171,7 +163,7 @@ namespace Statki
 			}
 			return ReadOption(menuSize);
 		}
-		private bool ReadOption(int size)
+		private static bool ReadOption(int size)
 		{
 			Keys key = Keys.None;
 			if (Console.KeyAvailable)

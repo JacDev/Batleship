@@ -10,27 +10,30 @@ namespace Statki
 		{
 			public ShotEvent(int coordX, int coordY, int shipNumb, bool wasHit, Moves player)
 			{
-				_coordX = coordX;
-				_coordY = coordY;
-				_shipNumb = shipNumb;
-				_wasHit = wasHit;
+				CoordX = coordX;
+				CoordY = coordY;
+				ShipNumb = shipNumb;
+				WasHit = wasHit;
 				_player = player;
 			}
-			private int _shipNumb;
-			private int _coordX;
-			private int _coordY;
-			private bool _wasHit;
 			private Moves _player;
-			public void UndoShot()
+
+			public int ShipNumb { get ; }
+			public int CoordX { get; }
+			public int CoordY { get; }
+			public bool WasHit { get; }
+
+			public ShotEvent UndoShot()
 			{
-				if (_wasHit)
+				if (WasHit)
 				{
-					_player.Opponent.PlayerShips[_shipNumb].UndoHit(_coordX, _coordY);
+					_player.Opponent.PlayerShips[ShipNumb].UndoHit(CoordX, CoordY);					
 				}
 				else
 				{
-					Board.Instance[_coordX, _coordY, _player.OpponentBoard] = (int)Marker.EmptyField;
+					_player.Opponent[CoordX, CoordY] = (int)Marker.EmptyField;
 				}
+				return this;
 			}
 		}
 		private enum LoadedAction : int { BackToMenu = -1, DontShot, Shot, Undo }
@@ -55,13 +58,16 @@ namespace Statki
 				LoadedAction shoot;
 				do
 				{
-					selectedField = Board.Instance[_x, _y, OpponentBoard];
+					selectedField = Opponent[_x, _y];
 					canShoot = CanShoot(selectedField);
 
-					Window.Instance.PrintBoard();
-					Board.Instance[_x, _y, OpponentBoard] = selectedField;
+					Moves leftPlayer = WhichBoard == BoardSide.Left ? this : Opponent;
+					Moves rightPlayer = WhichBoard == BoardSide.Right ? this : Opponent;
+					Window.PrintBoard(leftPlayer, rightPlayer);
 
-					shoot = readKeyforShoot();
+					Opponent[_x, _y] = selectedField;
+
+					shoot = ReadKeyforShoot();
 					if (shoot == LoadedAction.BackToMenu)
 					{
 						return Actions.BACK_TO_MENU;
@@ -76,7 +82,7 @@ namespace Statki
 				{
 					return Actions.END_GAME;
 				}
-				shots.Push(new ShotEvent(_x, _y, selectedField - 1, wasHit, this));
+				shots.Push(new ShotEvent(_x, _y, selectedField, wasHit, this));
 			} while (wasHit);
 			shots.Clear();
 			return Actions.MISSED;
@@ -85,12 +91,12 @@ namespace Statki
 		{
 			if (selectedField >= (int)Marker.FirstShip && selectedField <= (int)Marker.LastShip || selectedField == (int)Marker.EmptyField)
 			{
-				Board.Instance[_x, _y, OpponentBoard] = (int)Marker.ChosenToShoot;
+				Opponent[_x, _y] = (int)Marker.ChosenToShoot;
 				return true;
 			}
 			else
 			{
-				Board.Instance[_x, _y, OpponentBoard] = (int)Marker.CannotShoot;
+				Opponent[_x, _y] = (int)Marker.CannotShoot;
 				return false;
 			}
 		}
@@ -98,30 +104,50 @@ namespace Statki
 		{
 			if (selectedField >= (int)Marker.FirstShip && selectedField <= (int)Marker.LastShip)
 			{
-				if (Opponent.PlayerShips[selectedField - 1].HitShip(_x, _y))
+				if (Opponent.PlayerShips[selectedField].HitShip(_x, _y))
 				{
 					++SunkenShips;
+					Opponent.MarkShipNeighborhood(true, selectedField);
 					if (SunkenShips == 10)
 					{
 						return true;
 					}
 				}
+				Opponent.DrawShip(selectedField);
 				wasHit = true;
 			}
 			else
 			{
-				Board.Instance[_x, _y, OpponentBoard] = (int)Marker.AlreadyShot;
+				Opponent[_x, _y] = (int)Marker.AlreadyShot;
 			}
 			return false;
 		}
 		private void UndoAdded(int shipNumb, bool deleteAll)
 		{
-			PlayerShips[shipNumb - 1].UndoAdded();
+			UndoAddedShip(shipNumb);
 			if (!deleteAll)
 			{
-				for (int i = 0; i < shipNumb - 1; ++i)
+				ClearBoard();	
+			}
+			else
+			{
+				DrawShip(shipNumb);
+			}
+		}
+		public void UndoAddedShip(int shipNumb)
+		{
+			for (int i = 0; i < PlayerShips[shipNumb].Size; ++i)
+			{
+				(int coordX, int coordY) = PlayerShips[shipNumb][i];
+				this[coordX, coordY] = (int)Marker.EmptyField;
+			}
+			for (int i = 0; i < PlayerShips[shipNumb].Size; ++i)
+			{
+				(int coordX, int coordY) = PlayerShips[shipNumb][i];
+				for (int j = -1; j < 2; ++j)
 				{
-					PlayerShips[i].MarkNeighborhood(false);
+					for (int k = -1; k < 2; ++k)
+						this[coordX, coordY] = (int)Marker.EmptyField;
 				}
 			}
 		}
@@ -129,53 +155,57 @@ namespace Statki
 		{
 			if(shots.Count != 0)
 			{
-				shots.Pop().UndoShot();
+				ShotEvent shot = shots.Pop().UndoShot();
+				if (shot.WasHit)
+				{
+					Opponent.UndoHit(shot.CoordX, shot.CoordY, shot.ShipNumb);
+				}
 			}
 			else
 			{
 				Console.WriteLine("You can't undo the game.");//
 			}
 		}
-		private LoadedAction readKeyforShoot()
+		private LoadedAction ReadKeyforShoot()
 		{
 			bool isLoaded = false;
 			while (!isLoaded)
 			{
-				Keys key = Window.Instance.ReadKey();
+				Keys key = Window.ReadKey();
 				switch (key)
 				{
 					case Keys.Down:
 						{
-							if (++_x > Board.LowerEdge)
+							if (++_x > LowerEdge)
 							{ 
-								_x = Board.UpperEdge; 
+								_x = UpperEdge; 
 							}
 							isLoaded = true;
 							break;
 						}
 					case Keys.Up:
 						{
-							if (--_x < Board.UpperEdge)
+							if (--_x < UpperEdge)
 							{ 
-								_x = Board.LowerEdge;
+								_x = LowerEdge;
 							}
 							isLoaded = true;
 							break;
 						}
 					case Keys.Right:
 						{
-							if (++_y > Board.RightEdge)
+							if (++_y > RightEdge)
 							{ 
-								_y = Board.LeftEdge; 
+								_y = LeftEdge; 
 							}
 							isLoaded = true;
 							break;
 						}
 					case Keys.Left:
 						{
-							if (--_y < Board.LeftEdge)
+							if (--_y < LeftEdge)
 							{ 
-								_y = Board.RightEdge;
+								_y = RightEdge;
 							}
 							isLoaded = true;
 							break;
@@ -205,58 +235,63 @@ namespace Statki
 
 		private void AddShipsTest()
 		{
-			for (int i = 1; i < 6; i++)
+			for (int i = 0; i < 5; i++)
 			{
-				PlayerShips[i - 1] = new Ship(2 * (i - 1),0, 5, i, false, WhichBoard);
+				PlayerShips[i] = new Ship(2 * i ,0, 5, i, false);
+				DrawShip(i);
+				MarkShipNeighborhood(false, i);
 			}
-			for (int i = 6; i <= 10; i++)
+			for (int i = 5; i < 10; i++)
 			{
-				PlayerShips[i - 1] = new Ship(2 * (i - 6), 6, 4, i, false, WhichBoard);
+				PlayerShips[i] = new Ship(2 * (i - 5), 6, 4, i, false);
+				DrawShip(i);
+				MarkShipNeighborhood(false, i);
 			}
-			Board.Instance.ClearMarks();
+			ClearMarks();
 		}
 		protected override void AddShips()
 		{
-			int shipNumb = 1;
+			int shipNumb = 0;
 			int x = 0, y = 0;
 
-			for (; shipNumb <= _shipSize.Length; ++shipNumb)
+			for (; shipNumb < _shipSize.Length; ++shipNumb)
 			{
-				int currSize = _shipSize[shipNumb - 1];
+				int currSize = _shipSize[shipNumb];
 				bool couldAdd = false;
 				bool isFit = true;
 				bool isVertical = false;
-				y = (y + currSize > Board.PlayerBoardWidth) ? Board.LeftEdge : y;
+				y = (y + currSize > Width) ? LeftEdge : y;
 
 				do
 				{
-					isFit = IsFit(x, y, currSize, isVertical, WhichBoard);
+					isFit = IsFit(x, y, currSize, isVertical);
 					couldAdd = ReadKey(ref x, ref y, currSize, ref isVertical, ref shipNumb);
-					currSize = _shipSize[shipNumb - 1]; //when shipNumb change, size of ship can be bigger and ship can go outside
+					currSize = _shipSize[shipNumb]; //when shipNumb change (when undo), size of ship can be bigger and ship can go outside
 					IsInBoard(ref x, ref y, currSize, isVertical);
 				} while (!couldAdd || !isFit);
-				PlayerShips[shipNumb - 1] = new Ship(x, y, currSize, shipNumb, isVertical, WhichBoard);
+				PlayerShips[shipNumb] = new Ship(x, y, currSize, shipNumb, isVertical);
+				DrawShip(shipNumb);
 			}
-			Board.Instance.ClearMarks();
+			ClearMarks();
 		}
 		private void IsInBoard(ref int x, ref int y, int size, bool isVertical)
 		{
 			int coord1 = isVertical ? x : y;
 			int coord2 = isVertical ? y : x;
-			if (coord2 > Board.LowerEdge)
-				coord2 = Board.UpperEdge;
-			else if (coord1 + size > Board.Height)
-				coord1 = Board.UpperEdge;
-			else if (coord2 < Board.UpperEdge)
-				coord2 = Board.LowerEdge;
-			else if (coord1 < Board.UpperEdge)
-				coord1 = Board.Height - size;
+			if (coord2 > LowerEdge)
+				coord2 = UpperEdge;
+			else if (coord1 + size > Height)
+				coord1 = UpperEdge;
+			else if (coord2 < UpperEdge)
+				coord2 = LowerEdge;
+			else if (coord1 < UpperEdge)
+				coord1 = Height - size;
 			x = isVertical ? coord1 : coord2;
 			y = isVertical ? coord2 : coord1;
 		}
 		private bool ReadKey(ref int x, ref int y, int currSize, ref bool isVertical, ref int shipNumb)
 		{
-			Keys key = Window.Instance.ReadKey();
+			Keys key = Window.ReadKey();
 			switch (key)
 			{
 				case Keys.Down:
@@ -279,13 +314,13 @@ namespace Statki
 					{
 						do
 						{
-							if (shipNumb > 1)
+							if (shipNumb > 0)
 							{
-								PlayerShips[shipNumb - 1] = null;
-								UndoAdded(shipNumb - 1, key == Keys.Clear);
+								PlayerShips[shipNumb] = null;
+								UndoAdded(shipNumb, key == Keys.Clear);
 								--shipNumb;
 							}
-						} while (shipNumb > 1 && key != Keys.Undo);
+						} while (shipNumb > 0 && key != Keys.Undo);
 						break;
 					}
 				case Keys.Enter:
@@ -297,39 +332,41 @@ namespace Statki
 		private void RotateShip(ref int x, ref int y, int size, ref bool isVertical)
 		{
 			int coord = isVertical ? y : x;
-			if (coord + size > Board.Height)
+			if (coord + size > Height)
 			{
-				coord -= Board.Height + size;
+				coord -= Height + size;
 			}
 			x = isVertical ? x : coord;
 			y = isVertical ? coord : y;
 			isVertical = !isVertical;
 		}
-		private bool IsFit(int x, int y, int currSize, bool isVertical, BoardSide _whichBoard)
+		private bool IsFit(int x, int y, int currSize, bool isVertical)
 		{
 			int[] coveringFields = new int[currSize];
 			bool isFit = true;
 			for (int i = 0, j = 0; i < currSize && j < currSize;)
 			{
-				if (Board.Instance[x + j, y + i, _whichBoard] == (int)Marker.EmptyField)
-					Board.Instance[x + j, y + i, _whichBoard] = (int)Marker.ChosenToAdd;
+				if (this[x + j, y + i] == (int)Marker.EmptyField)
+					this[x + j, y + i] = (int)Marker.ChosenToAdd;
 				else
 				{
 					int changedFiled = isVertical ? j : i;
-					coveringFields[changedFiled] = Board.Instance[x + j, y + i, _whichBoard];
-					Board.Instance[x + j, y + i, _whichBoard] = (int)Marker.CannotAdd;
+					coveringFields[changedFiled] = this[x + j, y + i];
+					this[x + j, y + i] = (int)Marker.CannotAdd;
 					isFit = false;
 
 				}
 				if (isVertical) ++j;
 				else ++i;
 			}
-			Window.Instance.PrintBoard();
+			Moves leftPlayer = WhichBoard == BoardSide.Left ? this : Opponent;
+			Moves rightPlayer = WhichBoard == BoardSide.Right ? this : Opponent;
+			Window.PrintBoard(leftPlayer, rightPlayer);
 			for (int i = 0, j = 0; i < currSize && j < currSize;)
 			{
 				int changedFiled = isVertical ? j : i;
-				int previousVal = Board.Instance[x + j, y + i, _whichBoard] == (int)Marker.CannotAdd ? coveringFields[changedFiled] : (int)Marker.EmptyField;
-				Board.Instance[x + j, y + i, _whichBoard] = previousVal;
+				int previousVal = this[x + j, y + i] == (int)Marker.CannotAdd ? coveringFields[changedFiled] : (int)Marker.EmptyField;
+				this[x + j, y + i] = previousVal;
 				if (isVertical)
 				{
 					++j;

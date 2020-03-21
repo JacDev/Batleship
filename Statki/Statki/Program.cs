@@ -1,10 +1,11 @@
-﻿namespace Statki
+﻿
+namespace Statki
 {
 	class Program
 	{
 		static void Main(string[] args)
 		{
-			Game game = new Game();
+			new Game();
 		}
 	}
 }
