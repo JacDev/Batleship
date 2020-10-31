@@ -1,21 +1,18 @@
 ﻿using System;
+using System.Security.Authentication;
 using System.Threading;
 
 namespace Statki
 {
 	enum Keys : int { Left, Right, Up, Down, Enter, Escape, Rotate, Undo, Clear, None };
+	enum WindowEdge : int { Left, Right, Top, Bottom};
 	static class Window
 	{
-		private static readonly string[] _options = {
-	/*0*/"GRA Z KOMPUTEREM",
-	/*1*/"GRA Z PRZECIWNIKIEM",
-	/*2*/"WCZYTAJ GRE",
-	/*3*/"WYJDZ Z GRY",
-	/*4*/"KONTYNUUJ GRE",
-	/*5*/"ZAPISZ GRE"
-		};
-		private static string _space = "\t\t\t\t\t\t";
-		private static string _updown = new string(' ', 24);
+		private const int _separatorSize = 3;
+		private static string _spaceBetweenBoards = new string(' ', 40);
+		private static string _boardEdge = new string(' ', 24);
+		private static string _windowEdge = new string(' ', 2*_boardEdge.Length + _spaceBetweenBoards.Length + 4*_separatorSize+4);
+		private static string _horizontalEdgeSeparator = new string(' ', _separatorSize*2);
 		public static bool CanLoadGame { get; set; }
 
 		private static int _chosenOption;
@@ -24,13 +21,17 @@ namespace Statki
 		public static void PrintBoard(Moves leftBoard, Moves rightBoard)
 		{
 			Console.Clear();
-			Console.BackgroundColor = ConsoleColor.Black;
+			PrintWindowEdge(WindowEdge.Top);
 			PrintUpDown();
 			for (int x = 0; x < Moves.Height; ++x)
 			{
+				PrintWindowEdge(WindowEdge.Left);
 				PrintLine(x, leftBoard, rightBoard);
+				PrintWindowEdge(WindowEdge.Right);
 			}
 			PrintUpDown();
+			PrintWindowEdge(WindowEdge.Bottom);
+
 		}
 		private static void PrintLine(int line, Moves leftBoard, Moves rightBoard)
 		{
@@ -40,14 +41,13 @@ namespace Statki
 				PrintShipArea(leftBoard[line, y]);
 			}
 			PrintFrame();
-			Console.Write("{0}", _space);
+			Console.Write("{0}", _spaceBetweenBoards);
 			PrintFrame();
 			for (int y = 0; y < Moves.Width; ++y)
 			{
 				PrintShipArea(rightBoard[line, y]);
 			}
 			PrintFrame();
-			Console.WriteLine();
 		}
 		private static void PrintFrame()
 		{
@@ -57,13 +57,64 @@ namespace Statki
 		}
 		private static void PrintUpDown()
 		{
+			PrintWindowEdge(WindowEdge.Left);
 			Console.BackgroundColor = ConsoleColor.White;
-			Console.Write(_updown);
+			Console.Write(_boardEdge);
 			Console.BackgroundColor = ConsoleColor.Black;
-			Console.Write(_space);
+			Console.Write(_spaceBetweenBoards);
 			Console.BackgroundColor = ConsoleColor.White;
-			Console.WriteLine(_updown);
+			Console.Write(_boardEdge);
 			Console.BackgroundColor = ConsoleColor.Black;
+			PrintWindowEdge(WindowEdge.Right);
+		}
+		private static void PrintWindowEdge(WindowEdge windowEdge)
+		{
+			switch (windowEdge)
+			{
+				case WindowEdge.Left:
+					Console.BackgroundColor = ConsoleColor.White;
+					Console.Write("  ");
+					Console.BackgroundColor = ConsoleColor.Black;
+					Console.Write(_horizontalEdgeSeparator);
+					break;
+				case WindowEdge.Right:
+					Console.BackgroundColor = ConsoleColor.Black;
+					Console.Write(_horizontalEdgeSeparator);
+					Console.BackgroundColor = ConsoleColor.White;
+					Console.WriteLine("  ");
+					Console.BackgroundColor = ConsoleColor.Black;
+					break;
+				case WindowEdge.Top:
+					Console.BackgroundColor = ConsoleColor.White;
+					Console.WriteLine(_windowEdge);
+					Console.BackgroundColor = ConsoleColor.Black;
+					for(int i=0;i<_separatorSize; ++i)
+					{
+						Console.BackgroundColor = ConsoleColor.White;
+						Console.Write("  ");
+						Console.BackgroundColor = ConsoleColor.Black;
+						Console.Write(new string(' ', _windowEdge.Length-4));
+						Console.BackgroundColor = ConsoleColor.White;
+						Console.WriteLine("  ");
+						Console.BackgroundColor = ConsoleColor.Black;
+					}
+					break;
+				case WindowEdge.Bottom:
+					for (int i = 0; i < _separatorSize; ++i)
+					{
+						Console.BackgroundColor = ConsoleColor.White;
+						Console.Write("  ");
+						Console.BackgroundColor = ConsoleColor.Black;
+						Console.Write(new string(' ', _windowEdge.Length - 4));
+						Console.BackgroundColor = ConsoleColor.White;
+						Console.WriteLine("  ");
+						Console.BackgroundColor = ConsoleColor.Black;
+					}
+					Console.BackgroundColor = ConsoleColor.White;
+					Console.WriteLine(_windowEdge);
+					Console.BackgroundColor = ConsoleColor.Black;
+					break;
+			}
 		}
 		private static void PrintShipArea(int index)
 		{
@@ -140,7 +191,7 @@ namespace Statki
 		private static bool ShowMenuOptions()
 		{
 			Console.Clear();
-			int menuSize = CanLoadGame ? _options.Length : _options.Length - 2;
+			int menuSize = CanLoadGame ? LanguageOptions.MenuOptions.Length : LanguageOptions.MenuOptions.Length - 2;
 			for (int i = 0; i < menuSize; i++)
 			{
 				Console.Write(("").PadRight(40, ' '));
@@ -154,9 +205,9 @@ namespace Statki
 					{
 						Console.ForegroundColor = ConsoleColor.Red;
 					}
-					_isHighlighted = _isHighlighted ? false : true;
+					_isHighlighted = !_isHighlighted;
 				}
-				Console.WriteLine(_options[i]);
+				Console.WriteLine(LanguageOptions.MenuOptions[i]);
 
 				Console.BackgroundColor = ConsoleColor.Black;
 				Console.ForegroundColor = ConsoleColor.White;

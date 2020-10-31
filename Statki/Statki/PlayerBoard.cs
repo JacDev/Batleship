@@ -12,9 +12,9 @@ namespace Statki
 
 	abstract class PlayerBoard
 	{
-		static public int Height = 10, Width = 10;
-		public const int LeftEdge = 0, RightEdge = 9;
-		public const int UpperEdge = 0, LowerEdge = 9;
+		public const int Height = 10, Width = 10;
+		public const int LeftEdge = 0, RightEdge = Height - 1;
+		public const int UpperEdge = 0, LowerEdge = Width - 1;
 		private int[] _board;
 
 		public PlayerBoard()
@@ -43,25 +43,34 @@ namespace Statki
 		public string GetBoardAsString()
 		{
 			StringBuilder result = new StringBuilder(string.Empty);
-			for (int i = 0; i < Height; i++)
+			for (int i = 0; i < Height * Width; i++)
 			{
-				for (int j = 0; j < Width; j++)
-				{
-					result.Append(this[i, j].ToString() + " ");
-				}
+
+				result.Append(_board[i].ToString() + (i == Height * Width - 1 ? "" : " "));
 			}
 			return result.ToString();
 		}
-		public void LoadBoard(string line)
+		public void LoadBoardFromLine(string line)
 		{
-			char separator = ' ';
-			string[] substrings = line.Split(separator);
-			for (int i = 0; i < Height; ++i)
+			if (line != string.Empty)
 			{
-				for (int j = 0; j < Width; ++j)
+				char separator = ' ';
+				string[] substrings = line.Split(separator);
+				if (substrings.Length == Height * Width)
 				{
-					this[i, j] = Convert.ToInt32(substrings[i * Width + j]);
+					for (int i = 0; i < Height; ++i)
+					{
+						for (int j = 0; j < Width; ++j)
+						{
+							this[i, j] = Convert.ToInt32(substrings[i * Width + j]);
+						}
+					}
 				}
+				else
+				{
+					throw new NotImplementedException();
+				}
+
 			}
 		}
 		private bool IsInBoard(int indx, int indy)
@@ -85,7 +94,7 @@ namespace Statki
 				}
 			}
 		}
-		public void ClearMarks()
+		public void ClearNearShipMarks()
 		{
 			for (int x = 0; x < Height; ++x)
 			{

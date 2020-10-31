@@ -33,7 +33,7 @@ namespace Statki
 				MarkShipNeighborhood(false, shipNumb);
 				++shipNumb;
 			}
-			ClearMarks();
+			ClearNearShipMarks();
 		}
 
 		private Ship MakeShip(int size, int shipNumb)

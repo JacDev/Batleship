@@ -60,12 +60,12 @@ namespace Statki
 							closeWindow = true;
 							break;
 						}
-					case 4:
+					case 6:
 						{
 							endGame = Play();
 							break;
 						}
-					case 5:
+					case 7:
 						{
 							SaveGame();
 							break;
@@ -123,7 +123,7 @@ namespace Statki
 			using (StreamWriter outputFile = File.CreateText(Path.Combine(directory, "savedGame.txt")))
 			{
 				outputFile.WriteLine(leftPlayer.IsPerson().ToString() + " " + rightPlayer.IsPerson().ToString() + " " + leftPlayer.SunkenShips + " " + rightPlayer.SunkenShips + " " + whoseTurn.ToString() + " ");
-				outputFile.WriteLine(leftPlayer.GetShipsAsString() + rightPlayer.GetShipsAsString() + leftPlayer.GetBoardAsString() + rightPlayer.GetBoardAsString());
+				outputFile.WriteLine(leftPlayer.GetShipsAsString() + rightPlayer.GetShipsAsString() + leftPlayer.GetBoardAsString() +"\n"+ rightPlayer.GetBoardAsString());
 				outputFile.Close();
 			}
 		}
@@ -141,14 +141,14 @@ namespace Statki
 
 				for (int i = 0; i < 10; ++i)
 				{
-					leftPlayer.AddShipAfterLoadGame(reader.ReadLine(), i + 1);
+					leftPlayer.AddShipAfterLoadGame(reader.ReadLine(), i);
 				}
 				for (int i = 0; i < 10; ++i)
 				{
-					rightPlayer.AddShipAfterLoadGame(reader.ReadLine(), i + 1);
+					rightPlayer.AddShipAfterLoadGame(reader.ReadLine(), i);
 				}
-				leftPlayer.LoadBoard(reader.ReadToEnd());
-				rightPlayer.LoadBoard(reader.ReadToEnd());
+				leftPlayer.LoadBoardFromLine(reader.ReadLine());
+				rightPlayer.LoadBoardFromLine(reader.ReadLine());
 				return true;
 			}
 			return false;

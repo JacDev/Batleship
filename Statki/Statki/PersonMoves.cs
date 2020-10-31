@@ -247,7 +247,7 @@ namespace Statki
 				DrawShip(i);
 				MarkShipNeighborhood(false, i);
 			}
-			ClearMarks();
+			ClearNearShipMarks();
 		}
 		protected override void AddShips()
 		{
@@ -272,7 +272,7 @@ namespace Statki
 				PlayerShips[shipNumb] = new Ship(x, y, currSize, shipNumb, isVertical);
 				DrawShip(shipNumb);
 			}
-			ClearMarks();
+			ClearNearShipMarks();
 		}
 		private void IsInBoard(ref int x, ref int y, int size, bool isVertical)
 		{

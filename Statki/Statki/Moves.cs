@@ -42,10 +42,10 @@ namespace Statki
 		}
 		public void DrawShip(int shipNumber)
 		{
-			for (int i = 0; i < PlayerShips[shipNumber ].Size; ++i)
+			for (int i = 0; i < PlayerShips[shipNumber].Size; ++i)
 			{
-				Tuple<int, int> shipCoord = PlayerShips[shipNumber ][i];
-				this[shipCoord.Item1, shipCoord.Item2] = shipNumber + 10 * PlayerShips[shipNumber ].GetFieldMark(i);
+				Tuple<int, int> shipCoord = PlayerShips[shipNumber][i];
+				this[shipCoord.Item1, shipCoord.Item2] = shipNumber + 10 * PlayerShips[shipNumber].GetFieldMark(i);
 			}
 		}
 		virtual public void MarkShipNeighborhood(bool isSink, int shipNumber)
