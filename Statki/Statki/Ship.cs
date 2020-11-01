@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Text;
 
-namespace Statki
+namespace Battleship
 {
-	class Ship
+	public class Ship
 	{
 		enum State : int { Missed, Hit, Sunk };
 		private int _coordX;
@@ -72,7 +72,7 @@ namespace Statki
 			}				
 			++_left;
 		}
-		public bool HitShip(int coordX, int coordY, bool isComputer = false)
+		public bool HitShip(int coordX, int coordY)
 		{
 			int hitArea = _isVertical ? coordX : coordY;
 			for (int i = 0; i < Size; ++i)

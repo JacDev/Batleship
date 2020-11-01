@@ -2,22 +2,22 @@
 using System.Linq;
 using System.Text;
 
-namespace Statki
+namespace Battleship
 {
-	enum Marker : int
+	public enum Marker : int
 	{
 		EmptyField = 50, FirstShip = 0, LastShip = 9, FirstHitShip, LastHitShip = 19, FirstSunkShip, LastSunkShip = 29,
 		ChosenToAdd, NearShip, CannotAdd, ChosenToShoot, AlreadyShot, CannotShoot, NearSunkenShip
 	};
 
-	abstract class PlayerBoard
+	public class Board
 	{
 		public const int Height = 10, Width = 10;
 		public const int LeftEdge = 0, RightEdge = Height - 1;
 		public const int UpperEdge = 0, LowerEdge = Width - 1;
 		private int[] _board;
 
-		public PlayerBoard()
+		public Board()
 		{
 			_board = new int[Height * Width];
 			_board = Enumerable.Repeat((int)Marker.EmptyField, Height * Width).ToArray();

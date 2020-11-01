@@ -1,29 +1,33 @@
 ﻿using System;
-using System.Security.Authentication;
 using System.Threading;
 
-namespace Statki
+namespace Battleship
 {
-	enum Keys : int { Left, Right, Up, Down, Enter, Escape, Rotate, Undo, Clear, None };
-	enum WindowEdge : int { Left, Right, Top, Bottom};
-	static class Window
+	public enum Keys : int { Left, Right, Up, Down, Enter, Escape, Rotate, Undo, Clear, None };
+	enum WindowEdge : int { Left, Right, Top, Bottom };
+	public class Window
 	{
 		private const int _separatorSize = 3;
-		private static string _spaceBetweenBoards = new string(' ', 40);
-		private static string _boardEdge = new string(' ', 24);
-		private static string _windowEdge = new string(' ', 2*_boardEdge.Length + _spaceBetweenBoards.Length + 4*_separatorSize+4);
-		private static string _horizontalEdgeSeparator = new string(' ', _separatorSize*2);
-		public static bool CanLoadGame { get; set; }
+		private const int _spaceBeetweenBoardsSize = 40;
+		private const int _boardEdgeSize = 24;
+		private const int _oneBlockWidth = 2;
+		private const char _boardMarker = ' ';
+		private const string _doubleBoardMarker = "  ";
 
-		private static int _chosenOption;
-		private static bool _isHighlighted = true;
+		private readonly string _spaceBetweenBoards = new string(_boardMarker, _spaceBeetweenBoardsSize);
+		private readonly string _boardEdge = new string(_boardMarker, _boardEdgeSize);
+		private readonly string _windowEdge = new string(_boardMarker, 2 * _boardEdgeSize + _spaceBeetweenBoardsSize + 4 * _separatorSize + 2 * _oneBlockWidth);
+		private readonly string _horizontalEdgeSeparator = new string(_boardMarker, _separatorSize * 2);
 
-		public static void PrintBoard(Moves leftBoard, Moves rightBoard)
+		private int _chosenOption;
+		private bool _isHighlighted = true;
+
+		public void PrintBoard(Moves leftBoard, Moves rightBoard)
 		{
 			Console.Clear();
 			PrintWindowEdge(WindowEdge.Top);
 			PrintUpDown();
-			for (int x = 0; x < Moves.Height; ++x)
+			for (int x = 0; x < Board.Height; ++x)
 			{
 				PrintWindowEdge(WindowEdge.Left);
 				PrintLine(x, leftBoard, rightBoard);
@@ -33,29 +37,29 @@ namespace Statki
 			PrintWindowEdge(WindowEdge.Bottom);
 
 		}
-		private static void PrintLine(int line, Moves leftBoard, Moves rightBoard)
+		private void PrintLine(int line, Moves leftBoard, Moves rightBoard)
 		{
 			PrintFrame();
-			for (int y = 0; y < Moves.Width; ++y)
+			for (int y = 0; y < Board.Width; ++y)
 			{
-				PrintShipArea(leftBoard[line, y]);
+				PrintShipArea(leftBoard.Board[line, y]);
 			}
 			PrintFrame();
 			Console.Write("{0}", _spaceBetweenBoards);
 			PrintFrame();
-			for (int y = 0; y < Moves.Width; ++y)
+			for (int y = 0; y < Board.Width; ++y)
 			{
-				PrintShipArea(rightBoard[line, y]);
+				PrintShipArea(rightBoard.Board[line, y]);
 			}
 			PrintFrame();
 		}
-		private static void PrintFrame()
+		private void PrintFrame()
 		{
 			Console.BackgroundColor = ConsoleColor.White;
-			Console.Write("  ");
+			Console.Write(_doubleBoardMarker);
 			Console.BackgroundColor = ConsoleColor.Black;
 		}
-		private static void PrintUpDown()
+		private void PrintUpDown()
 		{
 			PrintWindowEdge(WindowEdge.Left);
 			Console.BackgroundColor = ConsoleColor.White;
@@ -67,13 +71,13 @@ namespace Statki
 			Console.BackgroundColor = ConsoleColor.Black;
 			PrintWindowEdge(WindowEdge.Right);
 		}
-		private static void PrintWindowEdge(WindowEdge windowEdge)
-		{
+		private void PrintWindowEdge(WindowEdge windowEdge)
+		{ 
 			switch (windowEdge)
 			{
 				case WindowEdge.Left:
 					Console.BackgroundColor = ConsoleColor.White;
-					Console.Write("  ");
+					Console.Write(_doubleBoardMarker);
 					Console.BackgroundColor = ConsoleColor.Black;
 					Console.Write(_horizontalEdgeSeparator);
 					break;
@@ -81,21 +85,21 @@ namespace Statki
 					Console.BackgroundColor = ConsoleColor.Black;
 					Console.Write(_horizontalEdgeSeparator);
 					Console.BackgroundColor = ConsoleColor.White;
-					Console.WriteLine("  ");
+					Console.WriteLine(_doubleBoardMarker);
 					Console.BackgroundColor = ConsoleColor.Black;
 					break;
 				case WindowEdge.Top:
 					Console.BackgroundColor = ConsoleColor.White;
 					Console.WriteLine(_windowEdge);
 					Console.BackgroundColor = ConsoleColor.Black;
-					for(int i=0;i<_separatorSize; ++i)
+					for (int i = 0; i < _separatorSize; ++i)
 					{
 						Console.BackgroundColor = ConsoleColor.White;
-						Console.Write("  ");
+						Console.Write(_doubleBoardMarker);
 						Console.BackgroundColor = ConsoleColor.Black;
-						Console.Write(new string(' ', _windowEdge.Length-4));
+						Console.Write(new string(_boardMarker, _windowEdge.Length - 4));
 						Console.BackgroundColor = ConsoleColor.White;
-						Console.WriteLine("  ");
+						Console.WriteLine(_doubleBoardMarker);
 						Console.BackgroundColor = ConsoleColor.Black;
 					}
 					break;
@@ -103,11 +107,11 @@ namespace Statki
 					for (int i = 0; i < _separatorSize; ++i)
 					{
 						Console.BackgroundColor = ConsoleColor.White;
-						Console.Write("  ");
+						Console.Write(_doubleBoardMarker);
 						Console.BackgroundColor = ConsoleColor.Black;
-						Console.Write(new string(' ', _windowEdge.Length - 4));
+						Console.Write(new string(_boardMarker, _windowEdge.Length - 4));
 						Console.BackgroundColor = ConsoleColor.White;
-						Console.WriteLine("  ");
+						Console.WriteLine(_doubleBoardMarker);
 						Console.BackgroundColor = ConsoleColor.Black;
 					}
 					Console.BackgroundColor = ConsoleColor.White;
@@ -116,7 +120,7 @@ namespace Statki
 					break;
 			}
 		}
-		private static void PrintShipArea(int index)
+		private void PrintShipArea(int index)
 		{
 			Console.BackgroundColor = ConsoleColor.Black;
 			switch (index)
@@ -154,47 +158,37 @@ namespace Statki
 					break;
 			}
 			//Console.Write(index + " "); //for debuging
-			Console.Write("  ");
+			Console.Write(_doubleBoardMarker);
 		}
-		public static Keys ReadKey()
+		public Keys ReadKey()
 		{
 			ConsoleKey key = Console.ReadKey(false).Key;
-			switch (key)
+			return key switch
 			{
-				case ConsoleKey.UpArrow:
-					return Keys.Up;
-				case ConsoleKey.DownArrow:
-					return Keys.Down;
-				case ConsoleKey.LeftArrow:
-					return Keys.Left;
-				case ConsoleKey.RightArrow:
-					return Keys.Right;
-				case ConsoleKey.Enter:
-					return Keys.Enter;
-				case ConsoleKey.Escape:
-					return Keys.Escape;
-				case ConsoleKey.R:
-					return Keys.Rotate;
-				case ConsoleKey.U:
-					return Keys.Undo;
-				case ConsoleKey.C:
-					return Keys.Clear;
-				default:
-					return Keys.None;
-			}
+				ConsoleKey.UpArrow => Keys.Up,
+				ConsoleKey.DownArrow => Keys.Down,
+				ConsoleKey.LeftArrow => Keys.Left,
+				ConsoleKey.RightArrow => Keys.Right,
+				ConsoleKey.Enter => Keys.Enter,
+				ConsoleKey.Escape => Keys.Escape,
+				ConsoleKey.R => Keys.Rotate,
+				ConsoleKey.U => Keys.Undo,
+				ConsoleKey.C => Keys.Clear,
+				_ => Keys.None,
+			};
 		}
-		public static int ShowMenu()
+		public int ShowMenu(string[] options, bool hideLastMenuOptions = false)
 		{
-			while (ShowMenuOptions()) ;
+			while (ShowMenuOptions(options, hideLastMenuOptions)) ;
 			return _chosenOption;
 		}
-		private static bool ShowMenuOptions()
+		private bool ShowMenuOptions(string[] options, bool hideLastMenuOptions)
 		{
 			Console.Clear();
-			int menuSize = CanLoadGame ? LanguageOptions.MenuOptions.Length : LanguageOptions.MenuOptions.Length - 2;
+			int menuSize = hideLastMenuOptions ? options.Length - 2 : options.Length;
 			for (int i = 0; i < menuSize; i++)
 			{
-				Console.Write(("").PadRight(40, ' '));
+				Console.Write(("").PadRight(40, _boardMarker));
 				if (i == _chosenOption)
 				{
 					if (_isHighlighted)
@@ -207,14 +201,14 @@ namespace Statki
 					}
 					_isHighlighted = !_isHighlighted;
 				}
-				Console.WriteLine(LanguageOptions.MenuOptions[i]);
+				Console.WriteLine(options[i]);
 
 				Console.BackgroundColor = ConsoleColor.Black;
 				Console.ForegroundColor = ConsoleColor.White;
 			}
 			return ReadOption(menuSize);
 		}
-		private static bool ReadOption(int size)
+		private bool ReadOption(int size)
 		{
 			Keys key = Keys.None;
 			if (Console.KeyAvailable)

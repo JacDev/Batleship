@@ -1,0 +1,47 @@
+{
+  "MenuOptions": [
+    "GRA Z KOMPUTEREM",
+    "GRA Z PRZECIWNIKIEM",
+    "WCZYTAJ GRE",
+    "WYJDZ Z GRY",
+    "ZMIEN JEZYK",
+    "USTAWIENIA",
+    "KONTYNUUJ GRE",
+    "ZAPISZ GRE"
+  ],
+  "FileService": [
+    "",
+    "NIE UDALO SIE WCZYTAC GRY.\n",
+    "NIE UDALO SIE ZAPISAC GRY.\n",
+    "ZAPISANO GRE POMYSLNIE.\n"
+  ],
+  "SignsMeaning": [
+    "Ustawiony statek",
+    "Trafiony statek",
+    "Zatopiony statek",
+    "Nie mozna ustawic statku",
+    "Pole w poblizu statku",
+    "Wybrane do strzalu",
+    "Tu nie mozna strzelic",
+    "Nietrafiony strzal",
+    "Pole do ustawienia statku"
+  ],
+  "TopMessages": [
+    "Strzalki do gory, w dol, w lewo i w prawo - przemieszczanie stateku na planszy.\nR - rotowanie statku, Enter - dodanie statku.",
+    "Strzalki do gory, w dol, w lewo i w prawo - wybranie miejsca do strzalu.\nEnter - strzal, Esc - powrot do menu.",
+    "Jeden z graczy musi sie odwrocic, zeby drugi mogl dodac statki!\nNacisnij Enter, aby kontynuowac.",
+    "Teraz niech drugi z graczy sie odwroci!\nNacisnij Enter, aby kontynuowac.",
+    "Nie trafiles!"
+  ],
+  "BottomMessages": [
+    "Trafiles statek przeciwnika!",
+    "Zostales trafiony!",
+    "Twoj statek zostal zatopiony!",
+    "Zatopiles statek przeciwnika!",
+    "Wygral gracz po lewej stronie!",
+    "Wygral gracz po prawej stronie!",
+    "Nie mozesz tu ustawic statku!",
+    "Nie mozesz strzelac w to miejsce!",
+    "Komputer nie trafil!"
+  ]
+}

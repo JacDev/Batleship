@@ -1,11 +1,11 @@
 ﻿
-namespace Statki
+namespace Battleship
 {
 	class Program
 	{
-		static void Main(string[] args)
+		static void Main()
 		{
-			new Game();
+			new MainService();
 		}
 	}
 }

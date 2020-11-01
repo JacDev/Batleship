@@ -1,31 +1,37 @@
 ﻿using System;
+using System.Text;
 
-namespace Statki
+namespace Battleship
 {
-	enum Players : int { Person, Computer };
-	enum BoardSide : int { Left, Right }
-	abstract class Moves : PlayerBoard
+	public enum Players : int { Person, Computer };
+	public enum BoardSide : int { Left, Right }
+	abstract public class Moves
 	{
 		public int SunkenShips { get; set; }
+		public BoardSide WhichBoard { get; }
 		public Moves Opponent { get; set; }
 		public Ship[] PlayerShips { get; private set; }
-		public BoardSide WhichBoard { get; }
+		public Board Board { get; set; }
+		protected readonly Window _window;
 		protected readonly int[] _shipSize = { 4, 3, 3, 2, 2, 2, 1, 1, 1, 1 };
 		protected int _x, _y;
 		protected Players _player;
 		protected abstract void AddShips();
+		public abstract Actions Shoot();
 		public void AddShipAfterLoadGame(string line, int shipNumb)
 		{
 			PlayerShips[shipNumb] = new Ship(line, shipNumb);
 		}
-		public abstract Actions Shoot();
-		public Moves(BoardSide boardNum, Players player, Moves opponent) : base()
+
+		public Moves(BoardSide boardNum, Players player, Moves opponent, Window window)
 		{
 			WhichBoard = boardNum;
 			SunkenShips = _x = _y = 0;
 			_player = player;
 			PlayerShips = new Ship[_shipSize.Length];
 			Opponent = opponent;
+			_window = window;
+			Board = new Board();
 		}
 		public bool IsPerson() //for saving game
 		{
@@ -33,19 +39,19 @@ namespace Statki
 		}
 		public string GetShipsAsString()
 		{
-			string allShips = "";
+			StringBuilder allShips = new StringBuilder(string.Empty);
 			foreach(Ship ship in PlayerShips)
 			{
-				allShips += ship.GetShipAsString() + "\n";
+				allShips.Append( ship.GetShipAsString() + "\n");
 			}
-			return allShips;
+			return allShips.ToString();
 		}
 		public void DrawShip(int shipNumber)
 		{
 			for (int i = 0; i < PlayerShips[shipNumber].Size; ++i)
 			{
 				Tuple<int, int> shipCoord = PlayerShips[shipNumber][i];
-				this[shipCoord.Item1, shipCoord.Item2] = shipNumber + 10 * PlayerShips[shipNumber].GetFieldMark(i);
+				Board[shipCoord.Item1, shipCoord.Item2] = shipNumber + 10 * PlayerShips[shipNumber].GetFieldMark(i);
 			}
 		}
 		virtual public void MarkShipNeighborhood(bool isSink, int shipNumber)
@@ -57,7 +63,7 @@ namespace Statki
 				for (int j = -1; j < 2; ++j)
 				{
 					for (int k = -1; k < 2; ++k)
-						SetAreaIf(shipCoord.Item1 + k, shipCoord.Item2 + j, mark, (int)Marker.EmptyField);
+						Board.SetAreaIf(shipCoord.Item1 + k, shipCoord.Item2 + j, mark, (int)Marker.EmptyField);
 				}
 			}
 		}

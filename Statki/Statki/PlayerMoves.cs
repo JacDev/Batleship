@@ -2,9 +2,9 @@
 using System.Threading;
 using System.Collections.Generic;
 
-namespace Statki
+namespace Battleship
 {
-	class PersonMoves : Moves
+	public class PlayerMoves : Moves
 	{
 		class ShotEvent
 		{
@@ -31,14 +31,14 @@ namespace Statki
 				}
 				else
 				{
-					_player.Opponent[CoordX, CoordY] = (int)Marker.EmptyField;
+					_player.Opponent.Board[CoordX, CoordY] = (int)Marker.EmptyField;
 				}
 				return this;
 			}
 		}
 		private enum LoadedAction : int { BackToMenu = -1, DontShot, Shot, Undo }
 		private Stack<ShotEvent> shots;
-		public PersonMoves(BoardSide boardNum, Moves opponent = null, bool afterLoad = false) : base(boardNum, Players.Person, opponent)
+		public PlayerMoves(Window window, BoardSide boardNum, Moves opponent = null, bool afterLoad = false) : base(boardNum, Players.Person, opponent, window)
 		{
 			if (!afterLoad)
 			{
@@ -58,14 +58,14 @@ namespace Statki
 				LoadedAction shoot;
 				do
 				{
-					selectedField = Opponent[_x, _y];
+					selectedField = Opponent.Board[_x, _y];
 					canShoot = CanShoot(selectedField);
 
 					Moves leftPlayer = WhichBoard == BoardSide.Left ? this : Opponent;
 					Moves rightPlayer = WhichBoard == BoardSide.Right ? this : Opponent;
-					Window.PrintBoard(leftPlayer, rightPlayer);
+					_window.PrintBoard(leftPlayer, rightPlayer);
 
-					Opponent[_x, _y] = selectedField;
+					Opponent.Board[_x, _y] = selectedField;
 
 					shoot = ReadKeyforShoot();
 					if (shoot == LoadedAction.BackToMenu)
@@ -91,12 +91,12 @@ namespace Statki
 		{
 			if (selectedField >= (int)Marker.FirstShip && selectedField <= (int)Marker.LastShip || selectedField == (int)Marker.EmptyField)
 			{
-				Opponent[_x, _y] = (int)Marker.ChosenToShoot;
+				Opponent.Board[_x, _y] = (int)Marker.ChosenToShoot;
 				return true;
 			}
 			else
 			{
-				Opponent[_x, _y] = (int)Marker.CannotShoot;
+				Opponent.Board[_x, _y] = (int)Marker.CannotShoot;
 				return false;
 			}
 		}
@@ -118,7 +118,7 @@ namespace Statki
 			}
 			else
 			{
-				Opponent[_x, _y] = (int)Marker.AlreadyShot;
+				Opponent.Board[_x, _y] = (int)Marker.AlreadyShot;
 			}
 			return false;
 		}
@@ -127,7 +127,7 @@ namespace Statki
 			UndoAddedShip(shipNumb);
 			if (!deleteAll)
 			{
-				ClearBoard();	
+				Board.ClearBoard();	
 			}
 			else
 			{
@@ -139,7 +139,7 @@ namespace Statki
 			for (int i = 0; i < PlayerShips[shipNumb].Size; ++i)
 			{
 				(int coordX, int coordY) = PlayerShips[shipNumb][i];
-				this[coordX, coordY] = (int)Marker.EmptyField;
+				Board[coordX, coordY] = (int)Marker.EmptyField;
 			}
 			for (int i = 0; i < PlayerShips[shipNumb].Size; ++i)
 			{
@@ -147,7 +147,7 @@ namespace Statki
 				for (int j = -1; j < 2; ++j)
 				{
 					for (int k = -1; k < 2; ++k)
-						this[coordX, coordY] = (int)Marker.EmptyField;
+						Board[coordX, coordY] = (int)Marker.EmptyField;
 				}
 			}
 		}
@@ -171,41 +171,41 @@ namespace Statki
 			bool isLoaded = false;
 			while (!isLoaded)
 			{
-				Keys key = Window.ReadKey();
+				Keys key = _window.ReadKey();
 				switch (key)
 				{
 					case Keys.Down:
 						{
-							if (++_x > LowerEdge)
+							if (++_x > Board.LowerEdge)
 							{ 
-								_x = UpperEdge; 
+								_x = Board.UpperEdge; 
 							}
 							isLoaded = true;
 							break;
 						}
 					case Keys.Up:
 						{
-							if (--_x < UpperEdge)
+							if (--_x < Board.UpperEdge)
 							{ 
-								_x = LowerEdge;
+								_x = Board.LowerEdge;
 							}
 							isLoaded = true;
 							break;
 						}
 					case Keys.Right:
 						{
-							if (++_y > RightEdge)
+							if (++_y > Board.RightEdge)
 							{ 
-								_y = LeftEdge; 
+								_y = Board.LeftEdge; 
 							}
 							isLoaded = true;
 							break;
 						}
 					case Keys.Left:
 						{
-							if (--_y < LeftEdge)
+							if (--_y < Board.LeftEdge)
 							{ 
-								_y = RightEdge;
+								_y = Board.RightEdge;
 							}
 							isLoaded = true;
 							break;
@@ -247,7 +247,7 @@ namespace Statki
 				DrawShip(i);
 				MarkShipNeighborhood(false, i);
 			}
-			ClearNearShipMarks();
+			Board.ClearNearShipMarks();
 		}
 		protected override void AddShips()
 		{
@@ -260,7 +260,7 @@ namespace Statki
 				bool couldAdd = false;
 				bool isFit = true;
 				bool isVertical = false;
-				y = (y + currSize > Width) ? LeftEdge : y;
+				y = (y + currSize > Board.Width) ? Board.LeftEdge : y;
 
 				do
 				{
@@ -272,26 +272,26 @@ namespace Statki
 				PlayerShips[shipNumb] = new Ship(x, y, currSize, shipNumb, isVertical);
 				DrawShip(shipNumb);
 			}
-			ClearNearShipMarks();
+			Board.ClearNearShipMarks();
 		}
 		private void IsInBoard(ref int x, ref int y, int size, bool isVertical)
 		{
 			int coord1 = isVertical ? x : y;
 			int coord2 = isVertical ? y : x;
-			if (coord2 > LowerEdge)
-				coord2 = UpperEdge;
-			else if (coord1 + size > Height)
-				coord1 = UpperEdge;
-			else if (coord2 < UpperEdge)
-				coord2 = LowerEdge;
-			else if (coord1 < UpperEdge)
-				coord1 = Height - size;
+			if (coord2 > Board.LowerEdge)
+				coord2 = Board.UpperEdge;
+			else if (coord1 + size > Board.Height)
+				coord1 = Board.UpperEdge;
+			else if (coord2 < Board.UpperEdge)
+				coord2 = Board.LowerEdge;
+			else if (coord1 < Board.UpperEdge)
+				coord1 = Board.Height - size;
 			x = isVertical ? coord1 : coord2;
 			y = isVertical ? coord2 : coord1;
 		}
 		private bool ReadKey(ref int x, ref int y, int currSize, ref bool isVertical, ref int shipNumb)
 		{
-			Keys key = Window.ReadKey();
+			Keys key = _window.ReadKey();
 			switch (key)
 			{
 				case Keys.Down:
@@ -332,9 +332,9 @@ namespace Statki
 		private void RotateShip(ref int x, ref int y, int size, ref bool isVertical)
 		{
 			int coord = isVertical ? y : x;
-			if (coord + size > Height)
+			if (coord + size > Board.Height)
 			{
-				coord -= Height + size;
+				coord -= Board.Height + size;
 			}
 			x = isVertical ? x : coord;
 			y = isVertical ? coord : y;
@@ -346,13 +346,13 @@ namespace Statki
 			bool isFit = true;
 			for (int i = 0, j = 0; i < currSize && j < currSize;)
 			{
-				if (this[x + j, y + i] == (int)Marker.EmptyField)
-					this[x + j, y + i] = (int)Marker.ChosenToAdd;
+				if (Board[x + j, y + i] == (int)Marker.EmptyField)
+					Board[x + j, y + i] = (int)Marker.ChosenToAdd;
 				else
 				{
 					int changedFiled = isVertical ? j : i;
-					coveringFields[changedFiled] = this[x + j, y + i];
-					this[x + j, y + i] = (int)Marker.CannotAdd;
+					coveringFields[changedFiled] = Board[x + j, y + i];
+					Board[x + j, y + i] = (int)Marker.CannotAdd;
 					isFit = false;
 
 				}
@@ -361,12 +361,12 @@ namespace Statki
 			}
 			Moves leftPlayer = WhichBoard == BoardSide.Left ? this : Opponent;
 			Moves rightPlayer = WhichBoard == BoardSide.Right ? this : Opponent;
-			Window.PrintBoard(leftPlayer, rightPlayer);
+			_window.PrintBoard(leftPlayer, rightPlayer);
 			for (int i = 0, j = 0; i < currSize && j < currSize;)
 			{
 				int changedFiled = isVertical ? j : i;
-				int previousVal = this[x + j, y + i] == (int)Marker.CannotAdd ? coveringFields[changedFiled] : (int)Marker.EmptyField;
-				this[x + j, y + i] = previousVal;
+				int previousVal = Board[x + j, y + i] == (int)Marker.CannotAdd ? coveringFields[changedFiled] : (int)Marker.EmptyField;
+				Board[x + j, y + i] = previousVal;
 				if (isVertical)
 				{
 					++j;

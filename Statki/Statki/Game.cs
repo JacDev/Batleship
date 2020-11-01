@@ -1,19 +1,26 @@
-﻿using System;
+﻿using Battleship.LanguageServices;
+using System;
 using System.IO;
 using System.Threading;
 
-namespace Statki
+namespace Battleship
 {
-	enum Actions : int { BACK_TO_MENU = -1, MISSED, END_GAME, UNDO }
+	public enum Actions : int { BACK_TO_MENU = -1, MISSED, END_GAME, UNDO }
 
-	class Game
+	public class Game
 	{
 
 		private int chosenOption;
 		private Moves leftPlayer = null, rightPlayer = null;
 		private BoardSide whoseTurn;
-		public Game()
+		private readonly ChosenLanguage _chosenLanguage;
+		private readonly Window _window;
+		private bool _canLoadGame;
+		public Game(ChosenLanguage chosenLanguage, Window window)
 		{
+			_chosenLanguage = chosenLanguage;
+			_window = window;
+			_canLoadGame = false;
 			MakeGame();
 		}
 		private void MakeGame()
@@ -21,17 +28,17 @@ namespace Statki
 			bool closeWindow = false;
 			while (!closeWindow)
 			{
-				chosenOption = Window.ShowMenu();
+				chosenOption = _window.ShowMenu(_chosenLanguage.MenuOptions, !_canLoadGame);
 				bool endGame = false;
 				switch (chosenOption)
 				{
 					case 0:
 						{
 							EndCurrentGame();
-							leftPlayer = new PersonMoves(BoardSide.Left);
-							rightPlayer = new ComputerMoves(BoardSide.Right, leftPlayer);
+							leftPlayer = new PlayerMoves(_window, BoardSide.Left);
+							rightPlayer = new ComputerMoves(_window, BoardSide.Right, leftPlayer);
 							leftPlayer.Opponent = rightPlayer;
-							Window.CanLoadGame = true;
+							_canLoadGame = true;
 							whoseTurn = BoardSide.Left;
 							endGame = Play();
 							break;
@@ -39,10 +46,10 @@ namespace Statki
 					case 1:
 						{
 							EndCurrentGame();
-							leftPlayer = new PersonMoves(BoardSide.Left);
-							rightPlayer = new PersonMoves(BoardSide.Right, leftPlayer);
+							leftPlayer = new PlayerMoves(_window, BoardSide.Left);
+							rightPlayer = new PlayerMoves(_window, BoardSide.Right, leftPlayer);
 							leftPlayer.Opponent = rightPlayer;
-							Window.CanLoadGame = true;
+							_canLoadGame = true;
 							whoseTurn = BoardSide.Left;
 							endGame = Play();
 							break;
@@ -52,7 +59,7 @@ namespace Statki
 							EndCurrentGame();
 							LoadGame();
 							endGame = Play();
-							Window.CanLoadGame = true;
+							_canLoadGame = true;
 							break;
 						}
 					case 3:
@@ -75,12 +82,15 @@ namespace Statki
 		}
 		private bool Play()
 		{
+			Moves winer;
 			while (true)
 			{
 				Moves currentPlayer = whoseTurn == BoardSide.Left ? leftPlayer : rightPlayer;
-				Actions currentPlayerAction = currentPlayer.Shoot();			
+				Actions currentPlayerAction = currentPlayer.Shoot();
+				leftPlayer.SunkenShips = 9;
 				if (currentPlayerAction == Actions.END_GAME)
 				{
+					winer = currentPlayer;
 					break;
 				}
 				else if (currentPlayerAction == Actions.BACK_TO_MENU)
@@ -93,7 +103,11 @@ namespace Statki
 				}
 			}
 
-			Window.PrintBoard(leftPlayer, rightPlayer);
+			_window.PrintBoard(leftPlayer, rightPlayer);
+			if (winer.WhichBoard == BoardSide.Left)
+			{
+				Console.WriteLine(("Wygrales").PadRight(40, ' '));
+			}
 			Console.Write(("").PadRight(40, ' '));
 			ReadEnter();
 			return true;
@@ -102,18 +116,18 @@ namespace Statki
 		{
 			if (rightPlayer != null)
 			{
-				rightPlayer.ClearBoard();
+				rightPlayer.Board.ClearBoard();
 			}
 			if (leftPlayer != null)
 			{
-				leftPlayer.ClearBoard();
+				leftPlayer.Board.ClearBoard();
 			}
 			rightPlayer = leftPlayer = null;
 		}
 		public void ReadEnter()
 		{
 			Console.WriteLine("Press ENTER to continue\n");
-			while (Window.ReadKey() != Keys.Enter) ;
+			while (_window.ReadKey() != Keys.Enter) ;
 			Thread.Sleep(200);
 		}
 		private void SaveGame()
@@ -123,7 +137,7 @@ namespace Statki
 			using (StreamWriter outputFile = File.CreateText(Path.Combine(directory, "savedGame.txt")))
 			{
 				outputFile.WriteLine(leftPlayer.IsPerson().ToString() + " " + rightPlayer.IsPerson().ToString() + " " + leftPlayer.SunkenShips + " " + rightPlayer.SunkenShips + " " + whoseTurn.ToString() + " ");
-				outputFile.WriteLine(leftPlayer.GetShipsAsString() + rightPlayer.GetShipsAsString() + leftPlayer.GetBoardAsString() +"\n"+ rightPlayer.GetBoardAsString());
+				outputFile.WriteLine(leftPlayer.GetShipsAsString() + rightPlayer.GetShipsAsString() + leftPlayer.Board.GetBoardAsString() +"\n"+ rightPlayer.Board.GetBoardAsString());
 				outputFile.Close();
 			}
 		}
@@ -147,8 +161,8 @@ namespace Statki
 				{
 					rightPlayer.AddShipAfterLoadGame(reader.ReadLine(), i);
 				}
-				leftPlayer.LoadBoardFromLine(reader.ReadLine());
-				rightPlayer.LoadBoardFromLine(reader.ReadLine());
+				leftPlayer.Board.LoadBoardFromLine(reader.ReadLine());
+				rightPlayer.Board.LoadBoardFromLine(reader.ReadLine());
 				return true;
 			}
 			return false;
@@ -171,11 +185,11 @@ namespace Statki
 		{
 			if(isPerson == "True")
 			{
-				return new PersonMoves(side, afterLoad: true);
+				return new PlayerMoves(_window, side, afterLoad: true);
 			}
 			else
 			{
-				return new ComputerMoves(side, afterLoad: true);			
+				return new ComputerMoves(_window, side, afterLoad: true);			
 			}
 		}
 	}
