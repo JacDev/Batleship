@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Threading;
 using System.Collections.Generic;
+using Statki.Interfaces;
 
 namespace Battleship
 {
-	public class PlayerMoves : Moves
+	public class Person : Player
 	{
 		class ShotEvent
 		{
-			public ShotEvent(int coordX, int coordY, int shipNumb, bool wasHit, Moves player)
+			public ShotEvent(int coordX, int coordY, int shipNumb, bool wasHit, Player player)
 			{
 				CoordX = coordX;
 				CoordY = coordY;
@@ -16,7 +17,7 @@ namespace Battleship
 				WasHit = wasHit;
 				_player = player;
 			}
-			private Moves _player;
+			private Player _player;
 
 			public int ShipNumb { get ; }
 			public int CoordX { get; }
@@ -37,15 +38,16 @@ namespace Battleship
 			}
 		}
 		private enum LoadedAction : int { BackToMenu = -1, DontShot, Shot, Undo }
-		private Stack<ShotEvent> shots;
-		public PlayerMoves(Window window, BoardSide boardNum, Moves opponent = null, bool afterLoad = false) : base(boardNum, Players.Person, opponent, window)
+		private Stack<ShotEvent> _shots;
+		public Person(Window window, BoardSide boardNum, Player opponent = null, bool afterLoad = false) 
+			: base(boardNum, Players.Person, opponent, window)
 		{
 			if (!afterLoad)
 			{
 				//AddShips();
 				AddShipsTest();
 			}
-			shots = new Stack<ShotEvent>();
+			_shots = new Stack<ShotEvent>();
 		}
 		public override Actions Shoot()
 		{
@@ -61,9 +63,9 @@ namespace Battleship
 					selectedField = Opponent.Board[_x, _y];
 					canShoot = CanShoot(selectedField);
 
-					Moves leftPlayer = WhichBoard == BoardSide.Left ? this : Opponent;
-					Moves rightPlayer = WhichBoard == BoardSide.Right ? this : Opponent;
-					_window.PrintBoard(leftPlayer, rightPlayer);
+					Player leftPlayer = WhichBoard == BoardSide.Left ? this : Opponent;
+					Player rightPlayer = WhichBoard == BoardSide.Right ? this : Opponent;
+					_window.PrintBoard(leftPlayer.Board, rightPlayer.Board);
 
 					Opponent.Board[_x, _y] = selectedField;
 
@@ -82,9 +84,9 @@ namespace Battleship
 				{
 					return Actions.END_GAME;
 				}
-				shots.Push(new ShotEvent(_x, _y, selectedField, wasHit, this));
+				_shots.Push(new ShotEvent(_x, _y, selectedField, wasHit, this));
 			} while (wasHit);
-			shots.Clear();
+			_shots.Clear();
 			return Actions.MISSED;
 		}
 		private bool CanShoot(int selectedField)
@@ -153,9 +155,9 @@ namespace Battleship
 		}
 		private void UndoShot()
 		{
-			if(shots.Count != 0)
+			if(_shots.Count != 0)
 			{
-				ShotEvent shot = shots.Pop().UndoShot();
+				ShotEvent shot = _shots.Pop().UndoShot();
 				if (shot.WasHit)
 				{
 					Opponent.UndoHit(shot.CoordX, shot.CoordY, shot.ShipNumb);
@@ -359,9 +361,9 @@ namespace Battleship
 				if (isVertical) ++j;
 				else ++i;
 			}
-			Moves leftPlayer = WhichBoard == BoardSide.Left ? this : Opponent;
-			Moves rightPlayer = WhichBoard == BoardSide.Right ? this : Opponent;
-			_window.PrintBoard(leftPlayer, rightPlayer);
+			Player leftPlayer = WhichBoard == BoardSide.Left ? this : Opponent;
+			Player rightPlayer = WhichBoard == BoardSide.Right ? this : Opponent;
+			_window.PrintBoard(leftPlayer.Board, rightPlayer.Board);
 			for (int i = 0, j = 0; i < currSize && j < currSize;)
 			{
 				int changedFiled = isVertical ? j : i;

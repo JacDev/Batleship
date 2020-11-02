@@ -1,11 +1,11 @@
-﻿using System;
+﻿using Statki.Interfaces;
+using System;
 using System.Threading;
 
 namespace Battleship
 {
-	public enum Keys : int { Left, Right, Up, Down, Enter, Escape, Rotate, Undo, Clear, None };
 	enum WindowEdge : int { Left, Right, Top, Bottom };
-	public class Window
+	public class Window : IOutputDevice, IInputDevicee
 	{
 		private const int _separatorSize = 3;
 		private const int _spaceBeetweenBoardsSize = 40;
@@ -22,7 +22,7 @@ namespace Battleship
 		private int _chosenOption;
 		private bool _isHighlighted = true;
 
-		public void PrintBoard(Moves leftBoard, Moves rightBoard)
+		public void PrintBoard(Board leftBoard, Board rightBoard)
 		{
 			Console.Clear();
 			PrintWindowEdge(WindowEdge.Top);
@@ -37,19 +37,19 @@ namespace Battleship
 			PrintWindowEdge(WindowEdge.Bottom);
 
 		}
-		private void PrintLine(int line, Moves leftBoard, Moves rightBoard)
+		private void PrintLine(int line, Board leftBoard, Board rightBoard)
 		{
 			PrintFrame();
 			for (int y = 0; y < Board.Width; ++y)
 			{
-				PrintShipArea(leftBoard.Board[line, y]);
+				PrintShipArea(leftBoard[line, y]);
 			}
 			PrintFrame();
 			Console.Write("{0}", _spaceBetweenBoards);
 			PrintFrame();
 			for (int y = 0; y < Board.Width; ++y)
 			{
-				PrintShipArea(rightBoard.Board[line, y]);
+				PrintShipArea(rightBoard[line, y]);
 			}
 			PrintFrame();
 		}
@@ -72,7 +72,7 @@ namespace Battleship
 			PrintWindowEdge(WindowEdge.Right);
 		}
 		private void PrintWindowEdge(WindowEdge windowEdge)
-		{ 
+		{
 			switch (windowEdge)
 			{
 				case WindowEdge.Left:

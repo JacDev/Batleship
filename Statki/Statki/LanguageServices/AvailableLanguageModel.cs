@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Battleship.LanguageServices
 {
-	public class AvailableLanguage
+	public class AvailableLanguageModel
 	{
 		public string[] Languages { get; set; }
 	}

@@ -1,6 +1,6 @@
 ﻿namespace Battleship.LanguageServices
 {
-	public class ChosenLanguage
+	public class ChosenLanguageModel
 	{
 		public string[] MenuOptions { get; set; }
 		public string[] FileService { get; set; }

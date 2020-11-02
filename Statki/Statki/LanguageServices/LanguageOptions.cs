@@ -11,13 +11,8 @@ namespace Battleship
 		{
 			try
 			{
-				string basePath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..\\..\\..\\"));
-				string filePath = Path.Combine(basePath, "LanguageData", "LanguageOptions.json");
-				if (File.Exists(filePath))
-				{
-					string jsonString = File.ReadAllText(filePath);
-					AvailableLanguages = JsonSerializer.Deserialize<AvailableLanguage>(jsonString);
-				}
+				string filePath = "LanguageData" + Path.DirectorySeparatorChar + "LanguageOptions.json";
+				AvailableLanguages = ReadFromJson<AvailableLanguageModel>(filePath);
 			}
 			catch
 			{
@@ -28,21 +23,28 @@ namespace Battleship
 		{
 			try
 			{
-				string basePath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..\\..\\..\\"));
-				string filePath = Path.Combine(basePath, "LanguageData", language + ".json");
-				if (File.Exists(filePath))
-				{
-					string jsonString = File.ReadAllText(filePath);
-					ChosenLanguage = JsonSerializer.Deserialize<ChosenLanguage>(jsonString);
-				}
+				string filePath = "LanguageData" + Path.DirectorySeparatorChar + language + ".json";
+				ChosenLanguage = ReadFromJson<ChosenLanguageModel>(filePath);
 			}
 			catch
 			{
 
 			}
 		}
-		public AvailableLanguage AvailableLanguages { get; set; }
-		public ChosenLanguage ChosenLanguage { get; set; }
+		private T ReadFromJson<T>(string fileName)
+		{
+			string basePath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..\\..\\..\\"));
+			string filePath = Path.Combine(basePath, fileName);
+			if (File.Exists(filePath))
+			{
+				
+				string jsonString = File.ReadAllText(filePath);
+				return JsonSerializer.Deserialize<T>(jsonString);
+			}
+			return default;
+		}
+		public AvailableLanguageModel AvailableLanguages { get; set; }
+		public ChosenLanguageModel ChosenLanguage { get; set; }
 
 	}
 }

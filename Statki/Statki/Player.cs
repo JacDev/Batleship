@@ -5,11 +5,11 @@ namespace Battleship
 {
 	public enum Players : int { Person, Computer };
 	public enum BoardSide : int { Left, Right }
-	abstract public class Moves
+	abstract public class Player
 	{
 		public int SunkenShips { get; set; }
 		public BoardSide WhichBoard { get; }
-		public Moves Opponent { get; set; }
+		public Player Opponent { get; set; }
 		public Ship[] PlayerShips { get; private set; }
 		public Board Board { get; set; }
 		protected readonly Window _window;
@@ -23,7 +23,7 @@ namespace Battleship
 			PlayerShips[shipNumb] = new Ship(line, shipNumb);
 		}
 
-		public Moves(BoardSide boardNum, Players player, Moves opponent, Window window)
+		public Player(BoardSide boardNum, Players player, Player opponent, Window window)
 		{
 			WhichBoard = boardNum;
 			SunkenShips = _x = _y = 0;

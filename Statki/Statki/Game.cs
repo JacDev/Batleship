@@ -1,4 +1,5 @@
 ﻿using Battleship.LanguageServices;
+using Statki.Interfaces;
 using System;
 using System.IO;
 using System.Threading;
@@ -11,12 +12,12 @@ namespace Battleship
 	{
 
 		private int chosenOption;
-		private Moves leftPlayer = null, rightPlayer = null;
+		private Player leftPlayer = null, rightPlayer = null;
 		private BoardSide whoseTurn;
-		private readonly ChosenLanguage _chosenLanguage;
+		private readonly ChosenLanguageModel _chosenLanguage;
 		private readonly Window _window;
 		private bool _canLoadGame;
-		public Game(ChosenLanguage chosenLanguage, Window window)
+		public Game(ChosenLanguageModel chosenLanguage, Window window)
 		{
 			_chosenLanguage = chosenLanguage;
 			_window = window;
@@ -35,8 +36,8 @@ namespace Battleship
 					case 0:
 						{
 							EndCurrentGame();
-							leftPlayer = new PlayerMoves(_window, BoardSide.Left);
-							rightPlayer = new ComputerMoves(_window, BoardSide.Right, leftPlayer);
+							leftPlayer = new Person(_window, BoardSide.Left);
+							rightPlayer = new Computer(_window, BoardSide.Right, leftPlayer);
 							leftPlayer.Opponent = rightPlayer;
 							_canLoadGame = true;
 							whoseTurn = BoardSide.Left;
@@ -46,8 +47,8 @@ namespace Battleship
 					case 1:
 						{
 							EndCurrentGame();
-							leftPlayer = new PlayerMoves(_window, BoardSide.Left);
-							rightPlayer = new PlayerMoves(_window, BoardSide.Right, leftPlayer);
+							leftPlayer = new Person(_window, BoardSide.Left);
+							rightPlayer = new Person(_window, BoardSide.Right, leftPlayer);
 							leftPlayer.Opponent = rightPlayer;
 							_canLoadGame = true;
 							whoseTurn = BoardSide.Left;
@@ -82,10 +83,10 @@ namespace Battleship
 		}
 		private bool Play()
 		{
-			Moves winer;
+			Player winer;
 			while (true)
 			{
-				Moves currentPlayer = whoseTurn == BoardSide.Left ? leftPlayer : rightPlayer;
+				Player currentPlayer = whoseTurn == BoardSide.Left ? leftPlayer : rightPlayer;
 				Actions currentPlayerAction = currentPlayer.Shoot();
 				leftPlayer.SunkenShips = 9;
 				if (currentPlayerAction == Actions.END_GAME)
@@ -103,7 +104,7 @@ namespace Battleship
 				}
 			}
 
-			_window.PrintBoard(leftPlayer, rightPlayer);
+			_window.PrintBoard(leftPlayer.Board, rightPlayer.Board);
 			if (winer.WhichBoard == BoardSide.Left)
 			{
 				Console.WriteLine(("Wygrales").PadRight(40, ' '));
@@ -181,15 +182,15 @@ namespace Battleship
 			rightPlayer.SunkenShips = Convert.ToInt32(substrings[3]);
 			whoseTurn = substrings[4] == "Left"? BoardSide.Left : BoardSide.Right;
 		}
-		private Moves MakePlayer(string isPerson, BoardSide side)
+		private Player MakePlayer(string isPerson, BoardSide side)
 		{
 			if(isPerson == "True")
 			{
-				return new PlayerMoves(_window, side, afterLoad: true);
+				return new Person(_window, side, afterLoad: true);
 			}
 			else
 			{
-				return new ComputerMoves(_window, side, afterLoad: true);			
+				return new Computer(_window, side, afterLoad: true);			
 			}
 		}
 	}

@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Battleship
 {
-	class ComputerMoves : Moves
+	class Computer : Player
 	{
 		private enum Directions { Down, Up, Right, Left };
 		private int _dirOfShooting;
@@ -14,7 +14,7 @@ namespace Battleship
 		private bool _wasHitAfterChoosingDir;
 		private bool _sameDirection;
 
-		public ComputerMoves(Window window, BoardSide boardNum, Moves opponent = null, bool afterLoad = false) : base(boardNum, Players.Computer, opponent, window)
+		public Computer(Window window, BoardSide boardNum, Player opponent = null, bool afterLoad = false) : base(boardNum, Players.Computer, opponent, window)
 		{
 			if (!afterLoad)
 			{
@@ -92,9 +92,9 @@ namespace Battleship
 				{
 					return Actions.END_GAME;
 				}
-				Moves leftPlayer = WhichBoard == BoardSide.Left ? this : Opponent;
-				Moves rightPlayer = WhichBoard == BoardSide.Right ? this : Opponent;
-				_window.PrintBoard(leftPlayer, rightPlayer);
+				Player leftPlayer = WhichBoard == BoardSide.Left ? this : Opponent;
+				Player rightPlayer = WhichBoard == BoardSide.Right ? this : Opponent;
+				_window.PrintBoard(leftPlayer.Board, rightPlayer.Board);
 
 				Thread.Sleep(1000);
 			} while (wasHit);
