@@ -1,10 +1,8 @@
-﻿using Battleship;
-
-namespace Statki.Interfaces
+﻿namespace Battleship.Interfaces
 {
 	public interface IOutputDevice
 	{
 		void PrintBoard(Board leftBoard, Board rightBoard);
-		int ShowMenu(string[] options, bool hideLastMenuOptions = false);
+		int ShowMenu(bool hideLastMenuOptions = false);
 	}
 }

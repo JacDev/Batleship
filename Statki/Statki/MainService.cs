@@ -5,8 +5,11 @@
 		public MainService()
 		{
 			LanguageOptions languageOptions = new LanguageOptions();
-			Window appWindow = new Window();
-			int option = appWindow.ShowMenu(languageOptions.AvailableLanguages.Languages);
+			languageOptions.LoadLanguages();
+			Window appWindow = new Window(languageOptions);
+
+
+			int option = appWindow.ChoseLanguage();
 			languageOptions.LoadOptions(languageOptions.AvailableLanguages.Languages[option]);
 			new Game(languageOptions.ChosenLanguage, appWindow);
 		}

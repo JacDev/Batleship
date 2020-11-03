@@ -15,21 +15,21 @@
     "NIE UDALO SIE ZAPISAC GRY.\n",
     "ZAPISANO GRE POMYSLNIE.\n"
   ],
-  "SignsMeaning": [
-    "Ustawiony statek",
-    "Trafiony statek",
-    "Zatopiony statek",
-    "Nie mozna ustawic statku",
-    "Pole w poblizu statku",
-    "Wybrane do strzalu",
-    "Tu nie mozna strzelic",
-    "Nietrafiony strzal",
-    "Pole do ustawienia statku"
-  ],
+  "SignsMeaning": {
+    "FirstShip": "Ustawiony statek",
+    "FirstHitShip": "Trafiony statek",
+    "FirstSunkShip": "Zatopiony statek",
+    "CannotAdd": "Nie mozna ustawic statku",
+    "NearShip": "Pole w poblizu statku",
+    "ChosenToShoot": "Wybrane do strzalu",
+    "CannotShoot": "Tu nie mozna strzelic",
+    "AlreadyShot": "Nietrafiony strzal",
+    "ChosenToAdd": "Pole do ustawienia statku"
+  },
   "TopMessages": [
     "Strzalki do gory, w dol, w lewo i w prawo - przemieszczanie stateku na planszy.\nR - rotowanie statku, Enter - dodanie statku.",
     "Strzalki do gory, w dol, w lewo i w prawo - wybranie miejsca do strzalu.\nEnter - strzal, Esc - powrot do menu.",
-    "Jeden z graczy musi sie odwrocic, zeby drugi mogl dodac statki!\nNacisnij Enter, aby kontynuowac.",
+    "Jeden z graczy musi sie odwrocic, zeby drugi mogl dodac Battleship!\nNacisnij Enter, aby kontynuowac.",
     "Teraz niech drugi z graczy sie odwroci!\nNacisnij Enter, aby kontynuowac.",
     "Nie trafiles!"
   ],

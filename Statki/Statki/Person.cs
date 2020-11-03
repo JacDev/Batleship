@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Threading;
 using System.Collections.Generic;
-using Statki.Interfaces;
+using Battleship.Interfaces;
+using Battleship.Consts;
 
 namespace Battleship
 {
@@ -165,7 +166,7 @@ namespace Battleship
 			}
 			else
 			{
-				Console.WriteLine("You can't undo the game.");//
+				Console.WriteLine("You can't undo the game.");
 			}
 		}
 		private LoadedAction ReadKeyforShoot()
@@ -178,36 +179,36 @@ namespace Battleship
 				{
 					case Keys.Down:
 						{
-							if (++_x > Board.LowerEdge)
+							if (++_x > BoardSize.BottomEdge)
 							{ 
-								_x = Board.UpperEdge; 
+								_x = BoardSize.TopEdge; 
 							}
 							isLoaded = true;
 							break;
 						}
 					case Keys.Up:
 						{
-							if (--_x < Board.UpperEdge)
+							if (--_x < BoardSize.TopEdge)
 							{ 
-								_x = Board.LowerEdge;
+								_x = BoardSize.BottomEdge;
 							}
 							isLoaded = true;
 							break;
 						}
 					case Keys.Right:
 						{
-							if (++_y > Board.RightEdge)
+							if (++_y > BoardSize.RightEdge)
 							{ 
-								_y = Board.LeftEdge; 
+								_y = BoardSize.LeftEdge; 
 							}
 							isLoaded = true;
 							break;
 						}
 					case Keys.Left:
 						{
-							if (--_y < Board.LeftEdge)
+							if (--_y < BoardSize.LeftEdge)
 							{ 
-								_y = Board.RightEdge;
+								_y = BoardSize.RightEdge;
 							}
 							isLoaded = true;
 							break;
@@ -262,7 +263,7 @@ namespace Battleship
 				bool couldAdd = false;
 				bool isFit = true;
 				bool isVertical = false;
-				y = (y + currSize > Board.Width) ? Board.LeftEdge : y;
+				y = (y + currSize > BoardSize.Width) ? BoardSize.LeftEdge : y;
 
 				do
 				{
@@ -280,14 +281,14 @@ namespace Battleship
 		{
 			int coord1 = isVertical ? x : y;
 			int coord2 = isVertical ? y : x;
-			if (coord2 > Board.LowerEdge)
-				coord2 = Board.UpperEdge;
-			else if (coord1 + size > Board.Height)
-				coord1 = Board.UpperEdge;
-			else if (coord2 < Board.UpperEdge)
-				coord2 = Board.LowerEdge;
-			else if (coord1 < Board.UpperEdge)
-				coord1 = Board.Height - size;
+			if (coord2 > BoardSize.BottomEdge)
+				coord2 = BoardSize.TopEdge;
+			else if (coord1 + size > BoardSize.Height)
+				coord1 = BoardSize.TopEdge;
+			else if (coord2 < BoardSize.TopEdge)
+				coord2 = BoardSize.BottomEdge;
+			else if (coord1 < BoardSize.TopEdge)
+				coord1 = BoardSize.Height - size;
 			x = isVertical ? coord1 : coord2;
 			y = isVertical ? coord2 : coord1;
 		}
@@ -334,9 +335,9 @@ namespace Battleship
 		private void RotateShip(ref int x, ref int y, int size, ref bool isVertical)
 		{
 			int coord = isVertical ? y : x;
-			if (coord + size > Board.Height)
+			if (coord + size > BoardSize.Height)
 			{
-				coord -= Board.Height + size;
+				coord -= BoardSize.Height + size;
 			}
 			x = isVertical ? x : coord;
 			y = isVertical ? coord : y;

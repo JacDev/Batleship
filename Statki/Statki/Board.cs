@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Battleship.Consts;
+using System;
 using System.Linq;
 using System.Text;
 
@@ -12,15 +13,12 @@ namespace Battleship
 
 	public class Board
 	{
-		public const int Height = 10, Width = 10;
-		public const int LeftEdge = 0, RightEdge = Height - 1;
-		public const int UpperEdge = 0, LowerEdge = Width - 1;
 		private int[] _board;
 
 		public Board()
 		{
-			_board = new int[Height * Width];
-			_board = Enumerable.Repeat((int)Marker.EmptyField, Height * Width).ToArray();
+			_board = new int[BoardSize.Height * BoardSize.Width];
+			_board = Enumerable.Repeat((int)Marker.EmptyField, BoardSize.Height * BoardSize.Width).ToArray();
 		}
 		public int this[int indx, int indy]
 		{
@@ -28,7 +26,7 @@ namespace Battleship
 			{
 				if (IsInBoard(indx, indy))
 				{
-					return _board[indx * Width + indy];
+					return _board[indx * BoardSize.Width + indy];
 				}
 				return -1; //add throwing exception
 			}
@@ -36,17 +34,17 @@ namespace Battleship
 			{
 				if (IsInBoard(indx, indy))
 				{
-					_board[indx * Width + indy] = value;
+					_board[indx * BoardSize.Width + indy] = value;
 				}
 			}
 		}
 		public string GetBoardAsString()
 		{
 			StringBuilder result = new StringBuilder(string.Empty);
-			for (int i = 0; i < Height * Width; i++)
+			for (int i = 0; i < BoardSize.Height * BoardSize.Width; i++)
 			{
 
-				result.Append(_board[i].ToString() + (i == Height * Width - 1 ? "" : " "));
+				result.Append(_board[i].ToString() + (i == BoardSize.Height * BoardSize.Width - 1 ? "" : " "));
 			}
 			return result.ToString();
 		}
@@ -56,13 +54,13 @@ namespace Battleship
 			{
 				char separator = ' ';
 				string[] substrings = line.Split(separator);
-				if (substrings.Length == Height * Width)
+				if (substrings.Length == BoardSize.Height * BoardSize.Width)
 				{
-					for (int i = 0; i < Height; ++i)
+					for (int i = 0; i < BoardSize.Height; ++i)
 					{
-						for (int j = 0; j < Width; ++j)
+						for (int j = 0; j < BoardSize.Width; ++j)
 						{
-							this[i, j] = Convert.ToInt32(substrings[i * Width + j]);
+							this[i, j] = Convert.ToInt32(substrings[i * BoardSize.Width + j]);
 						}
 					}
 				}
@@ -75,7 +73,7 @@ namespace Battleship
 		}
 		private bool IsInBoard(int indx, int indy)
 		{
-			if (indx >= UpperEdge && indx <= LowerEdge && indy >= LeftEdge && indy <= RightEdge)
+			if (indx >= BoardSize.TopEdge && indx <= BoardSize.BottomEdge && indy >= BoardSize.LeftEdge && indy <= BoardSize.RightEdge)
 			{
 				return true;
 			}
@@ -96,9 +94,9 @@ namespace Battleship
 		}
 		public void ClearNearShipMarks()
 		{
-			for (int x = 0; x < Height; ++x)
+			for (int x = 0; x < BoardSize.Height; ++x)
 			{
-				for (int y = 0; y < Width; ++y)
+				for (int y = 0; y < BoardSize.Width; ++y)
 				{
 					if (this[x, y] == (int)Marker.NearShip)
 					{
@@ -109,7 +107,7 @@ namespace Battleship
 		}
 		public void ClearBoard()
 		{
-			_board = Enumerable.Repeat((int)Marker.EmptyField, Height * Width).ToArray();
+			_board = Enumerable.Repeat((int)Marker.EmptyField, BoardSize.Height * BoardSize.Width).ToArray();
 		}
 	}
 }

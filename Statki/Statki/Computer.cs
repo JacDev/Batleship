@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Linq;
+using Battleship.Consts;
 
 namespace Battleship
 {
@@ -50,15 +51,15 @@ namespace Battleship
 
 				int coord = isVertical ? x : y;
 				isFit = true;
-				if (coord + size > Board.Height)
+				if (coord + size > BoardSize.Height)
 				{
-					x = isVertical ? Board.UpperEdge : x;
-					y = isVertical ? y : Board.LeftEdge;
+					x = isVertical ? BoardSize.TopEdge : x;
+					y = isVertical ? y : BoardSize.LeftEdge;
 				}
 				for (int i = 0; i < size; i++)
 				{
-					int px = isVertical ? i : Board.UpperEdge;
-					int py = isVertical ? Board.LeftEdge : i;
+					int px = isVertical ? i : BoardSize.TopEdge;
+					int py = isVertical ? BoardSize.LeftEdge : i;
 					if (Board[x + px, y + py] != (int)Marker.EmptyField)
 					{
 						isFit = false;
@@ -78,8 +79,8 @@ namespace Battleship
 					Random rnd = new Random();
 					do
 					{
-						_lastX = _x = rnd.Next(Board.Width);
-						_lastY = _y = rnd.Next(Board.Height);
+						_lastX = _x = rnd.Next(BoardSize.Width);
+						_lastY = _y = rnd.Next(BoardSize.Height);
 					} while (Opponent.Board[_x, _y] != (int)Marker.EmptyField && Opponent.Board[_x, _y] > (int)Marker.LastShip);
 					wasHit = ShotAfterCoordDraw();
 				}
@@ -194,7 +195,7 @@ namespace Battleship
 				case int i when (i == (int)Directions.Right || i == (int)Directions.Down):
 					{
 						int coord = _dirOfShooting == (int)Directions.Down ? _lastX : _lastY;
-						if (coord + 1 > Board.LowerEdge)
+						if (coord + 1 > BoardSize.BottomEdge)
 						{
 							return true;
 						}
@@ -209,7 +210,7 @@ namespace Battleship
 				case int i when (i == (int)Directions.Left || i == (int)Directions.Up):
 					{
 						int coord = _dirOfShooting == (int)Directions.Up ? _lastX : _lastY;
-						if (coord - 1 < Board.LeftEdge)
+						if (coord - 1 < BoardSize.LeftEdge)
 						{
 							return true;
 						}

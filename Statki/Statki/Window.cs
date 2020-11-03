@@ -1,5 +1,7 @@
-﻿using Statki.Interfaces;
+﻿using Battleship.Consts;
+using Battleship.Interfaces;
 using System;
+using System.Linq;
 using System.Threading;
 
 namespace Battleship
@@ -7,27 +9,27 @@ namespace Battleship
 	enum WindowEdge : int { Left, Right, Top, Bottom };
 	public class Window : IOutputDevice, IInputDevicee
 	{
-		private const int _separatorSize = 3;
-		private const int _spaceBeetweenBoardsSize = 40;
-		private const int _boardEdgeSize = 24;
-		private const int _oneBlockWidth = 2;
-		private const char _boardMarker = ' ';
-		private const string _doubleBoardMarker = "  ";
-
-		private readonly string _spaceBetweenBoards = new string(_boardMarker, _spaceBeetweenBoardsSize);
-		private readonly string _boardEdge = new string(_boardMarker, _boardEdgeSize);
-		private readonly string _windowEdge = new string(_boardMarker, 2 * _boardEdgeSize + _spaceBeetweenBoardsSize + 4 * _separatorSize + 2 * _oneBlockWidth);
-		private readonly string _horizontalEdgeSeparator = new string(_boardMarker, _separatorSize * 2);
+		private readonly string _spaceBetweenBoards = new string(WindowSize.BoardMarker, WindowSize.SpaceBeetweenBoardsSize);
+		private readonly string _boardEdge = new string(WindowSize.BoardMarker, WindowSize.BoardEdgeSize);
+		private readonly string _windowEdge = new string(WindowSize.BoardMarker, 2 * WindowSize.BoardEdgeSize
+			+ WindowSize.SpaceBeetweenBoardsSize + 4 * WindowSize.SeparatorSize + 2 * WindowSize.OneBlockWidth);
+		private readonly string _horizontalEdgeSeparator = new string(WindowSize.BoardMarker, WindowSize.SeparatorSize * 2);
 
 		private int _chosenOption;
 		private bool _isHighlighted = true;
+		private LanguageOptions _languageOptions;
+
+		public Window(LanguageOptions languageOptions)
+		{
+			_languageOptions = languageOptions;
+		}
 
 		public void PrintBoard(Board leftBoard, Board rightBoard)
 		{
 			Console.Clear();
 			PrintWindowEdge(WindowEdge.Top);
 			PrintUpDown();
-			for (int x = 0; x < Board.Height; ++x)
+			for (int x = 0; x < BoardSize.Height; ++x)
 			{
 				PrintWindowEdge(WindowEdge.Left);
 				PrintLine(x, leftBoard, rightBoard);
@@ -39,24 +41,43 @@ namespace Battleship
 		}
 		private void PrintLine(int line, Board leftBoard, Board rightBoard)
 		{
+			string[] vall = Enum.GetNames(typeof(Marker));
 			PrintFrame();
-			for (int y = 0; y < Board.Width; ++y)
+			for (int y = 0; y < BoardSize.Width; ++y)
 			{
 				PrintShipArea(leftBoard[line, y]);
 			}
+			
 			PrintFrame();
-			Console.Write("{0}", _spaceBetweenBoards);
+			if(line < _languageOptions.ChosenLanguage.SignsMeaningList.Count)
+			{
+				string markerName = vall.FirstOrDefault(x=>x.Equals(_languageOptions.ChosenLanguage.SignsMeaningList.ElementAt(line).Item1));
+				int markerValue = (int)Enum.Parse(typeof(Marker), markerName);
+				PrintMessage(_languageOptions.ChosenLanguage.SignsMeaningList[line].Item2, markerValue);
+			}
+			else
+			{
+				Console.Write("{0}", _spaceBetweenBoards);
+			}
 			PrintFrame();
-			for (int y = 0; y < Board.Width; ++y)
+			for (int y = 0; y < BoardSize.Width; ++y)
 			{
 				PrintShipArea(rightBoard[line, y]);
 			}
 			PrintFrame();
 		}
+		private void PrintMessage(string message, int marker)
+		{
+			Console.Write(WindowSize.DoubleBoardMarker);
+			PrintShipArea(marker);
+			Console.Write(" -  " + message);
+			Console.Write("{0}", new string(WindowSize.BoardMarker, WindowSize.SpaceBeetweenBoardsSize - WindowSize.DoubleBoardMarker.Length * 4 - message.Length));
+
+		}
 		private void PrintFrame()
 		{
 			Console.BackgroundColor = ConsoleColor.White;
-			Console.Write(_doubleBoardMarker);
+			Console.Write(WindowSize.DoubleBoardMarker);
 			Console.BackgroundColor = ConsoleColor.Black;
 		}
 		private void PrintUpDown()
@@ -77,7 +98,7 @@ namespace Battleship
 			{
 				case WindowEdge.Left:
 					Console.BackgroundColor = ConsoleColor.White;
-					Console.Write(_doubleBoardMarker);
+					Console.Write(WindowSize.DoubleBoardMarker);
 					Console.BackgroundColor = ConsoleColor.Black;
 					Console.Write(_horizontalEdgeSeparator);
 					break;
@@ -85,40 +106,38 @@ namespace Battleship
 					Console.BackgroundColor = ConsoleColor.Black;
 					Console.Write(_horizontalEdgeSeparator);
 					Console.BackgroundColor = ConsoleColor.White;
-					Console.WriteLine(_doubleBoardMarker);
+					Console.WriteLine(WindowSize.DoubleBoardMarker);
 					Console.BackgroundColor = ConsoleColor.Black;
 					break;
 				case WindowEdge.Top:
 					Console.BackgroundColor = ConsoleColor.White;
 					Console.WriteLine(_windowEdge);
 					Console.BackgroundColor = ConsoleColor.Black;
-					for (int i = 0; i < _separatorSize; ++i)
+					for (int i = 0; i < WindowSize.SeparatorSize; ++i)
 					{
-						Console.BackgroundColor = ConsoleColor.White;
-						Console.Write(_doubleBoardMarker);
-						Console.BackgroundColor = ConsoleColor.Black;
-						Console.Write(new string(_boardMarker, _windowEdge.Length - 4));
-						Console.BackgroundColor = ConsoleColor.White;
-						Console.WriteLine(_doubleBoardMarker);
-						Console.BackgroundColor = ConsoleColor.Black;
+						PrintSideEdge();
 					}
 					break;
 				case WindowEdge.Bottom:
-					for (int i = 0; i < _separatorSize; ++i)
+					for (int i = 0; i < WindowSize.SeparatorSize; ++i)
 					{
-						Console.BackgroundColor = ConsoleColor.White;
-						Console.Write(_doubleBoardMarker);
-						Console.BackgroundColor = ConsoleColor.Black;
-						Console.Write(new string(_boardMarker, _windowEdge.Length - 4));
-						Console.BackgroundColor = ConsoleColor.White;
-						Console.WriteLine(_doubleBoardMarker);
-						Console.BackgroundColor = ConsoleColor.Black;
+						PrintSideEdge();
 					}
 					Console.BackgroundColor = ConsoleColor.White;
 					Console.WriteLine(_windowEdge);
 					Console.BackgroundColor = ConsoleColor.Black;
 					break;
 			}
+		}
+		private void PrintSideEdge()
+		{
+			Console.BackgroundColor = ConsoleColor.White;
+			Console.Write(WindowSize.DoubleBoardMarker);
+			Console.BackgroundColor = ConsoleColor.Black;
+			Console.Write(new string(WindowSize.BoardMarker, _windowEdge.Length - 2 * WindowSize.OneBlockWidth));
+			Console.BackgroundColor = ConsoleColor.White;
+			Console.WriteLine(WindowSize.DoubleBoardMarker);
+			Console.BackgroundColor = ConsoleColor.Black;
 		}
 		private void PrintShipArea(int index)
 		{
@@ -158,7 +177,8 @@ namespace Battleship
 					break;
 			}
 			//Console.Write(index + " "); //for debuging
-			Console.Write(_doubleBoardMarker);
+			Console.Write(WindowSize.DoubleBoardMarker);
+			Console.BackgroundColor = ConsoleColor.Black;
 		}
 		public Keys ReadKey()
 		{
@@ -177,35 +197,56 @@ namespace Battleship
 				_ => Keys.None,
 			};
 		}
-		public int ShowMenu(string[] options, bool hideLastMenuOptions = false)
+		public int ChoseLanguage()
 		{
-			while (ShowMenuOptions(options, hideLastMenuOptions)) ;
+			while (ShowMenuOptions(_languageOptions.AvailableLanguages.Languages)) ;
 			return _chosenOption;
 		}
-		private bool ShowMenuOptions(string[] options, bool hideLastMenuOptions)
+		public int ShowMenu(bool hideLastMenuOptions = false)
+		{
+			while (ShowMenuOptions(_languageOptions.ChosenLanguage.MenuOptions, hideLastMenuOptions)) ;
+			return _chosenOption;
+		}
+		private bool ShowMenuOptions(string[] options, bool hideLastMenuOptions = false)
 		{
 			Console.Clear();
+			PrintWindowEdge(WindowEdge.Top);
 			int menuSize = hideLastMenuOptions ? options.Length - 2 : options.Length;
-			for (int i = 0; i < menuSize; i++)
+			for (int i = 0; i < WindowSize.Height; i++)
 			{
-				Console.Write(("").PadRight(40, _boardMarker));
-				if (i == _chosenOption)
-				{
-					if (_isHighlighted)
+				
+				if (i < menuSize) {
+					PrintWindowEdge(WindowEdge.Left);
+					Console.Write(("")
+						.PadRight(WindowSize.BoardEdgeSize + WindowSize.SpaceBeetweenBoardsSize/2 - (int)Math.Floor(options[i].Length/2.0)
+						,WindowSize.BoardMarker));
+					if (i == _chosenOption)
 					{
-						Console.BackgroundColor = ConsoleColor.Red;
+						if (_isHighlighted)
+						{
+							Console.BackgroundColor = ConsoleColor.Red;
+						}
+						else
+						{
+							Console.ForegroundColor = ConsoleColor.Red;
+						}
+						_isHighlighted = !_isHighlighted;
 					}
-					else
-					{
-						Console.ForegroundColor = ConsoleColor.Red;
-					}
-					_isHighlighted = !_isHighlighted;
+					
+					Console.Write(options[i]);
+					Console.BackgroundColor = ConsoleColor.Black;
+					Console.ForegroundColor = ConsoleColor.White;
+					Console.Write(("")
+						.PadRight(WindowSize.BoardEdgeSize + WindowSize.SpaceBeetweenBoardsSize/2 - (int)Math.Ceiling(options[i].Length / 2.0)
+						,WindowSize.BoardMarker));
+					PrintWindowEdge(WindowEdge.Right);
 				}
-				Console.WriteLine(options[i]);
-
-				Console.BackgroundColor = ConsoleColor.Black;
-				Console.ForegroundColor = ConsoleColor.White;
+				else
+				{
+					PrintSideEdge();
+				}
 			}
+			PrintWindowEdge(WindowEdge.Bottom);
 			return ReadOption(menuSize);
 		}
 		private bool ReadOption(int size)

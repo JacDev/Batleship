@@ -1,5 +1,5 @@
 ﻿using Battleship.LanguageServices;
-using Statki.Interfaces;
+using Battleship.Interfaces;
 using System;
 using System.IO;
 using System.Threading;
@@ -29,7 +29,7 @@ namespace Battleship
 			bool closeWindow = false;
 			while (!closeWindow)
 			{
-				chosenOption = _window.ShowMenu(_chosenLanguage.MenuOptions, !_canLoadGame);
+				chosenOption = _window.ShowMenu(!_canLoadGame);
 				bool endGame = false;
 				switch (chosenOption)
 				{
