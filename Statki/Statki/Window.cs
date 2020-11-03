@@ -18,10 +18,12 @@ namespace Battleship
 		private int _chosenOption;
 		private bool _isHighlighted = true;
 		private LanguageOptions _languageOptions;
+		private readonly ILoggerService _loggerService;
 
-		public Window(LanguageOptions languageOptions)
+		public Window(LanguageOptions languageOptions, ILoggerService loggerService)
 		{
 			_languageOptions = languageOptions;
+			_loggerService = loggerService;
 		}
 
 		public void PrintBoard(Board leftBoard, Board rightBoard)
@@ -41,30 +43,37 @@ namespace Battleship
 		}
 		private void PrintLine(int line, Board leftBoard, Board rightBoard)
 		{
-			string[] vall = Enum.GetNames(typeof(Marker));
-			PrintFrame();
-			for (int y = 0; y < BoardSize.Width; ++y)
+			try
 			{
-				PrintShipArea(leftBoard[line, y]);
-			}
-			
-			PrintFrame();
-			if(line < _languageOptions.ChosenLanguage.SignsMeaningList.Count)
+				string[] vall = Enum.GetNames(typeof(Marker));
+				PrintFrame();
+				for (int y = 0; y < BoardSize.Width; ++y)
+				{
+					PrintShipArea(leftBoard[line, y]);
+				}
+
+				PrintFrame();
+				if (line < _languageOptions.ChosenLanguage.SignsMeaningList.Count)
+				{
+					string markerName = vall.FirstOrDefault(x => x.Equals(_languageOptions.ChosenLanguage.SignsMeaningList.ElementAt(line).Item1));
+					int markerValue = (int)Enum.Parse(typeof(Marker), markerName);
+					PrintMessage(_languageOptions.ChosenLanguage.SignsMeaningList[line].Item2, markerValue);
+				}
+				else
+				{
+					Console.Write("{0}", _spaceBetweenBoards);
+				}
+				PrintFrame();
+				for (int y = 0; y < BoardSize.Width; ++y)
+				{
+					PrintShipArea(rightBoard[line, y]);
+				}
+				PrintFrame();
+			} 
+			catch(Exception ex)
 			{
-				string markerName = vall.FirstOrDefault(x=>x.Equals(_languageOptions.ChosenLanguage.SignsMeaningList.ElementAt(line).Item1));
-				int markerValue = (int)Enum.Parse(typeof(Marker), markerName);
-				PrintMessage(_languageOptions.ChosenLanguage.SignsMeaningList[line].Item2, markerValue);
+				_loggerService.Error(ex);
 			}
-			else
-			{
-				Console.Write("{0}", _spaceBetweenBoards);
-			}
-			PrintFrame();
-			for (int y = 0; y < BoardSize.Width; ++y)
-			{
-				PrintShipArea(rightBoard[line, y]);
-			}
-			PrintFrame();
 		}
 		private void PrintMessage(string message, int marker)
 		{

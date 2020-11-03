@@ -1,4 +1,7 @@
-﻿namespace Battleship
+﻿using Battleship.Logger;
+using System;
+
+namespace Battleship
 {
 	public class MainService
 	{
