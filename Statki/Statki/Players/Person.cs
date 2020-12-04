@@ -20,7 +20,7 @@ namespace Battleship
 			}
 			private Player _player;
 
-			public int ShipNumb { get ; }
+			public int ShipNumb { get; }
 			public int CoordX { get; }
 			public int CoordY { get; }
 			public bool WasHit { get; }
@@ -29,7 +29,7 @@ namespace Battleship
 			{
 				if (WasHit)
 				{
-					_player.Opponent.PlayerShips[ShipNumb].UndoHit(CoordX, CoordY);					
+					_player.Opponent.PlayerShips[ShipNumb].UndoHit(CoordX, CoordY);
 				}
 				else
 				{
@@ -41,10 +41,17 @@ namespace Battleship
 		private readonly IInputDevice _inputDevice;
 		private enum LoadedAction : int { BackToMenu = -1, DontShot, Shot, Undo }
 		private Stack<ShotEvent> _shots;
-		public Person(IOutputDevice outputDevice, 
+		private int _sizeOfCurrentAddingShip;
+		private int _numbOfCurrentAddingShip;
+		private int _coordXAddingShip = 0;
+		private int _coordYAddingShip = 0;
+		private bool _isVerticalAddingShip = false;
+		private bool _isFitAddingShip = true;
+		private int[] _coveringFieldsAddingShip;
+		public Person(IOutputDevice outputDevice,
 			BoardSide boardNum,
 			IInputDevice inputDevice,
-			Player opponent = null, 
+			Player opponent = null,
 			bool afterLoad = false)
 			: base(boardNum, Players.Person, opponent, outputDevice)
 		{
@@ -69,11 +76,16 @@ namespace Battleship
 				{
 					selectedField = Opponent.Board.GetField(_x, _y);
 					canShoot = CanShoot(selectedField);
+					if (!canShoot && _outputDevice.GetBottomMessage() ==-1)
+					{
+						_outputDevice.SetBottomMessage(6);
+					}
 
 					Player leftPlayer = WhichBoard == BoardSide.Left ? this : Opponent;
 					Player rightPlayer = WhichBoard == BoardSide.Right ? this : Opponent;
 
 					_outputDevice.PrintBoard(leftPlayer.Board, rightPlayer.Board, false);
+					_outputDevice.SetBottomMessage(-1);
 
 					Opponent.Board.SetField(_x, _y, selectedField);
 
@@ -87,10 +99,18 @@ namespace Battleship
 						UndoShot();
 					}
 				} while (shoot != LoadedAction.Shot || !canShoot);
-
-				if(MarkField(selectedField, ref wasHit))
+				int result = MarkField(selectedField, ref wasHit);
+				if (result == -1)
 				{
 					return Actions.EndGame;
+				}
+				else if (result == 1)
+				{
+					_outputDevice.SetBottomMessage(0);
+				}
+				else if (result == 2)
+				{
+					_outputDevice.SetBottomMessage(3);
 				}
 				_shots.Push(new ShotEvent(_x, _y, selectedField, wasHit, this));
 			} while (wasHit);
@@ -110,27 +130,34 @@ namespace Battleship
 				return false;
 			}
 		}
-		private bool MarkField(int selectedField, ref bool wasHit)
+		private int MarkField(int selectedField, ref bool wasHit)
 		{
 			if (selectedField >= (int)Marker.FirstShip && selectedField <= (int)Marker.LastShip)
 			{
 				if (Opponent.PlayerShips[selectedField].HitShip(_x, _y))
 				{
 					++SunkenShips;
-					Opponent.MarkShipNeighborhood(true, selectedField);
+					Opponent.SinkShip(selectedField);
 					if (SunkenShips == 10)
 					{
-						return true;
+						return -1;
+					}
+					else
+					{
+						Opponent.DrawShip(selectedField);
+						wasHit = true;
+						return 2;
 					}
 				}
 				Opponent.DrawShip(selectedField);
 				wasHit = true;
+				return 1;
 			}
 			else
 			{
 				Opponent.Board.SetField(_x, _y, (int)Marker.AlreadyShot);
 			}
-			return false;
+			return 0;
 		}
 		private void UndoAdded(int shipNumb, bool deleteAll)
 		{
@@ -164,7 +191,7 @@ namespace Battleship
 		}
 		private void UndoShot()
 		{
-			if(_shots.Count != 0)
+			if (_shots.Count != 0)
 			{
 				ShotEvent shot = _shots.Pop().UndoShot();
 				if (shot.WasHit)
@@ -188,8 +215,8 @@ namespace Battleship
 					case Keys.Down:
 						{
 							if (++_x > BoardSize.BottomEdge)
-							{ 
-								_x = BoardSize.TopEdge; 
+							{
+								_x = BoardSize.TopEdge;
 							}
 							isLoaded = true;
 							break;
@@ -197,7 +224,7 @@ namespace Battleship
 					case Keys.Up:
 						{
 							if (--_x < BoardSize.TopEdge)
-							{ 
+							{
 								_x = BoardSize.BottomEdge;
 							}
 							isLoaded = true;
@@ -206,8 +233,8 @@ namespace Battleship
 					case Keys.Right:
 						{
 							if (++_y > BoardSize.RightEdge)
-							{ 
-								_y = BoardSize.LeftEdge; 
+							{
+								_y = BoardSize.LeftEdge;
 							}
 							isLoaded = true;
 							break;
@@ -215,7 +242,7 @@ namespace Battleship
 					case Keys.Left:
 						{
 							if (--_y < BoardSize.LeftEdge)
-							{ 
+							{
 								_y = BoardSize.RightEdge;
 							}
 							isLoaded = true;
@@ -248,7 +275,7 @@ namespace Battleship
 		{
 			for (int i = 0; i < 5; i++)
 			{
-				PlayerShips[i] = new Ship(2 * i ,0, 5, i, false);
+				PlayerShips[i] = new Ship(2 * i, 0, 5, i, false);
 				DrawShip(i);
 				MarkShipNeighborhood(false, i);
 			}
@@ -262,77 +289,92 @@ namespace Battleship
 		}
 		protected override void AddShips()
 		{
-			int shipNumb = 0;
-			int x = 0, y = 0;
+			_numbOfCurrentAddingShip = 0;
 
-			for (; shipNumb < _shipSize.Length; ++shipNumb)
+			for (; _numbOfCurrentAddingShip < _shipSize.Length; ++_numbOfCurrentAddingShip)
 			{
-				int currSize = _shipSize[shipNumb];
-				bool couldAdd;
-				bool isFit;
-				bool isVertical = false;
-				y = (y + currSize > BoardSize.Width) ? BoardSize.LeftEdge : y;
+				_sizeOfCurrentAddingShip = _shipSize[_numbOfCurrentAddingShip];
+				bool wantAdd;
+				_coordYAddingShip = (_coordYAddingShip + _sizeOfCurrentAddingShip > BoardSize.Width) ? BoardSize.LeftEdge : _coordYAddingShip;
 
 				do
 				{
-					isFit = IsFit(x, y, currSize, isVertical);
-					couldAdd = ReadKey(ref x, ref y, currSize, ref isVertical, ref shipNumb);
-					currSize = _shipSize[shipNumb]; //when shipNumb change (when undo), size of ship can be bigger and ship can go outside
-					IsInBoard(ref x, ref y, currSize, isVertical);
-				} while (!couldAdd || !isFit);
-				PlayerShips[shipNumb] = new Ship(x, y, currSize, shipNumb, isVertical);
-				DrawShip(shipNumb);
-				MarkShipNeighborhood(false, shipNumb);
+					_isFitAddingShip = true;
+					PrepareToAdd();
+					if (!_isFitAddingShip)
+					{
+						_outputDevice.SetBottomMessage(0);
+					}
+
+					Player leftPlayer = WhichBoard == BoardSide.Left ? this : Opponent;
+					Player rightPlayer = WhichBoard == BoardSide.Right ? this : Opponent;
+					_outputDevice.PrintBoard(leftPlayer.Board, rightPlayer.Board, true);
+
+					_outputDevice.SetBottomMessage(-1);
+
+					wantAdd = WantAdd();
+					_sizeOfCurrentAddingShip = _shipSize[_numbOfCurrentAddingShip];
+					IsInBoard();
+
+				} while (!wantAdd || !_isFitAddingShip);
+
+				CreateShip();
 			}
 			Board.ClearNearShipMarks();
 		}
-		private void IsInBoard(ref int x, ref int y, int size, bool isVertical)
+		private void CreateShip()
 		{
-			int coord1 = isVertical ? x : y;
-			int coord2 = isVertical ? y : x;
+			PlayerShips[_numbOfCurrentAddingShip] = new Ship(_coordXAddingShip, _coordYAddingShip, _sizeOfCurrentAddingShip, _numbOfCurrentAddingShip, _isVerticalAddingShip);
+			DrawShip(_numbOfCurrentAddingShip);
+			MarkShipNeighborhood(false, _numbOfCurrentAddingShip);
+		}
+		private void IsInBoard()
+		{
+			int coord1 = _isVerticalAddingShip ? _coordXAddingShip : _coordYAddingShip;
+			int coord2 = _isVerticalAddingShip ? _coordYAddingShip : _coordXAddingShip;
 			if (coord2 > BoardSize.BottomEdge)
 				coord2 = BoardSize.TopEdge;
-			else if (coord1 + size > BoardSize.Height)
+			else if (coord1 + _sizeOfCurrentAddingShip > BoardSize.Height)
 				coord1 = BoardSize.TopEdge;
 			else if (coord2 < BoardSize.TopEdge)
 				coord2 = BoardSize.BottomEdge;
 			else if (coord1 < BoardSize.TopEdge)
-				coord1 = BoardSize.Height - size;
-			x = isVertical ? coord1 : coord2;
-			y = isVertical ? coord2 : coord1;
+				coord1 = BoardSize.Height - _sizeOfCurrentAddingShip;
+			_coordXAddingShip = _isVerticalAddingShip ? coord1 : coord2;
+			_coordYAddingShip = _isVerticalAddingShip ? coord2 : coord1;
 		}
-		private bool ReadKey(ref int x, ref int y, int currSize, ref bool isVertical, ref int shipNumb)
+		private bool ReadKey()
 		{
 			Keys key = _inputDevice.ReadKey();
 			switch (key)
 			{
 				case Keys.Down:
-					x++;
+					_coordXAddingShip++;
 					break;
 				case Keys.Up:
-					x--;
+					_coordXAddingShip--;
 					break;
 				case Keys.Right:
-					y++;
+					_coordYAddingShip++;
 					break;
 				case Keys.Left:
-					y--;
+					_coordYAddingShip--;
 					break;
 				case Keys.Rotate:
-					RotateShip(ref x, ref y, currSize, ref isVertical);
+					RotateShip();
 					break;
 				case Keys.Undo:
 				case Keys.Clear:
 					{
 						do
 						{
-							if (shipNumb > 0)
+							if (_numbOfCurrentAddingShip > 0)
 							{
-								UndoAdded(shipNumb - 1, key == Keys.Clear);
-								PlayerShips[shipNumb-1] = null;
-								--shipNumb;
+								UndoAdded(_numbOfCurrentAddingShip - 1, key == Keys.Clear);
+								PlayerShips[_numbOfCurrentAddingShip - 1] = null;
+								--_numbOfCurrentAddingShip;
 							}
-						} while (shipNumb > 0 && key != Keys.Undo);
+						} while (_numbOfCurrentAddingShip > 0 && key != Keys.Undo);
 						break;
 					}
 				case Keys.Enter:
@@ -342,54 +384,48 @@ namespace Battleship
 			_inputDevice.ClearStram();
 			return false;
 		}
-		private void RotateShip(ref int x, ref int y, int size, ref bool isVertical)
+		private void RotateShip()
 		{
-			int coord = isVertical ? y : x;
-			if (coord + size > BoardSize.Height)
+			int coord = _isVerticalAddingShip ? _coordYAddingShip : _coordXAddingShip;
+			if (coord + _sizeOfCurrentAddingShip > BoardSize.Height)
 			{
-				coord -= BoardSize.Height + size;
+				coord -= BoardSize.Height + _sizeOfCurrentAddingShip;
 			}
-			x = isVertical ? x : coord;
-			y = isVertical ? coord : y;
-			isVertical = !isVertical;
+			_coordXAddingShip = _isVerticalAddingShip ? _coordXAddingShip : coord;
+			_coordYAddingShip = _isVerticalAddingShip ? coord : _coordYAddingShip;
+			_isVerticalAddingShip = !_isVerticalAddingShip;
 		}
-		private bool IsFit(int x, int y, int currSize, bool isVertical)
+		public void PrepareToAdd()
 		{
-			int[] coveringFields = new int[currSize];
-			bool isFit = true;
-			for (int i = 0, j = 0; i < currSize && j < currSize;)
+			_coveringFieldsAddingShip = new int[_sizeOfCurrentAddingShip];
+			for (int i = 0, j = 0; i < _sizeOfCurrentAddingShip && j < _sizeOfCurrentAddingShip;)
 			{
-				if (Board.GetField(x + j, y + i) == (int)Marker.EmptyField)
-					Board.SetField(x + j, y + i, (int)Marker.ChosenToAdd);
+				if (Board.GetField(_coordXAddingShip + j, _coordYAddingShip + i) == (int)Marker.EmptyField)
+					Board.SetField(_coordXAddingShip + j, _coordYAddingShip + i, (int)Marker.ChosenToAdd);
 				else
 				{
-					int changedFiled = isVertical ? j : i;
-					coveringFields[changedFiled] = Board.GetField(x + j, y + i);
-					Board.SetField(x + j, y + i, (int)Marker.CannotAdd);
-					isFit = false;
-
+					int changedFiled = _isVerticalAddingShip ? j : i;
+					_coveringFieldsAddingShip[changedFiled] = Board.GetField(_coordXAddingShip + j, _coordYAddingShip + i);
+					Board.SetField(_coordXAddingShip + j, _coordYAddingShip + i, (int)Marker.CannotAdd);
+					_isFitAddingShip = false;
 				}
-				if (isVertical) ++j;
+				if (_isVerticalAddingShip) ++j;
 				else ++i;
 			}
-			Player leftPlayer = WhichBoard == BoardSide.Left ? this : Opponent;
-			Player rightPlayer = WhichBoard == BoardSide.Right ? this : Opponent;
-			_outputDevice.PrintBoard(leftPlayer.Board, rightPlayer.Board, true);
-			for (int i = 0, j = 0; i < currSize && j < currSize;)
+		}
+		private bool WantAdd()
+		{
+			for (int i = 0, j = 0; i < _sizeOfCurrentAddingShip && j < _sizeOfCurrentAddingShip;)
 			{
-				int changedFiled = isVertical ? j : i;
-				int previousVal = Board.GetField(x + j, y + i) == (int)Marker.CannotAdd ? coveringFields[changedFiled] : (int)Marker.EmptyField;
-				Board.SetField(x + j, y + i, previousVal);
-				if (isVertical)
-				{
+				int changedFiled = _isVerticalAddingShip ? j : i;
+				int previousVal = Board.GetField(_coordXAddingShip + j, _coordYAddingShip + i) == (int)Marker.CannotAdd ? _coveringFieldsAddingShip[changedFiled] : (int)Marker.EmptyField;
+				Board.SetField(_coordXAddingShip + j, _coordYAddingShip + i, previousVal);
+				if (_isVerticalAddingShip)
 					++j;
-				}
 				else
-				{
 					++i;
-				}
 			}
-			return isFit;
+			return ReadKey();
 		}
 	}
 }

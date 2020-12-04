@@ -37,7 +37,6 @@ namespace Battleship
 			}
 			Board.ClearNearShipMarks();
 		}
-
 		private Ship MakeShip(int size, int shipNumb)
 		{
 			Random rnd = new Random();
@@ -101,6 +100,7 @@ namespace Battleship
 
 				Thread.Sleep(1000);
 			} while (wasHit);
+			_outputDevice.SetBottomMessage(7);
 			return Actions.Missed;
 		}
 		private bool ShotAfterCoordDraw()
@@ -108,6 +108,7 @@ namespace Battleship
 			if (Opponent.Board.GetField(_lastX, _lastY) != (int)Marker.EmptyField)
 			{
 				HitShip(true);
+				_outputDevice.SetBottomMessage(1);
 				return true;
 			}
 			else
@@ -120,7 +121,8 @@ namespace Battleship
 		{
 			if (Opponent.Board.GetField(_lastX, _lastY) != (int)Marker.EmptyField)
 			{
-				HitShip(false);				
+				HitShip(false);
+				_outputDevice.SetBottomMessage(1);
 				return true;
 			}
 			else
@@ -240,8 +242,10 @@ namespace Battleship
 						_chosenDir[i] = false;
 					}
 				}
+				Opponent.SinkShip(numbOfHitShip);
 				Opponent.MarkShipNeighborhood(true, numbOfHitShip);
 				++SunkenShips;
+				_outputDevice.SetBottomMessage(2);
 			}
 			else if (!isAfterDraw)
 			{

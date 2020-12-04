@@ -107,12 +107,16 @@ namespace Battleship
 					_whoseTurn = _whoseTurn == BoardSide.Left ? BoardSide.Right : BoardSide.Left;
 				}
 			}
-
-			_outputDevice.PrintBoard(_leftPlayer.Board, _rightPlayer.Board, false);
 			if (winer.WhichBoard == BoardSide.Left)
 			{
-				Console.WriteLine(("Wygrales").PadRight(40, ' '));
+				_outputDevice.SetBottomMessage(8);
 			}
+			else
+			{
+				_outputDevice.SetBottomMessage(9);
+			}
+			_outputDevice.PrintBoard(_leftPlayer.Board, _rightPlayer.Board, false);
+			Console.WriteLine();
 			Console.Write(("").PadRight(40, ' '));
 			ReadEnter();
 			return true;

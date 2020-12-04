@@ -23,9 +23,10 @@
       "NearShip": "Pole w poblizu statku"
     },
     "TopMessages": [
-      "Strzalki do gory, w dol, w lewo i w prawo - przemieszczanie stateku na planszy.\nR - rotacja statku, enter - dodanie statku.",
-      "Jeden z graczy musi sie odwrocic, zeby drugi mogl dodac statki!\nNacisnij Eeter, aby kontynuowac.",
-      "Teraz niech drugi z graczy sie odwroci!\nNacisnij Enter, aby kontynuowac."
+      "Strzalki do gory, w dol, w lewo i w prawo - przemieszczanie stateku na planszy.",
+      "U - cofniecie dodania, C - wyczyszczenie planszy, R - rotacja statku, Enter - dodanie statku.",
+      "Jeden z graczy musi sie odwrocic, zeby drugi mogl dodac statki! Nacisnij Enter, aby kontynuowac.",
+      "Teraz niech drugi z graczy sie odwroci! Nacisnij Enter, aby kontynuowac."
     ],
     "BottomMessages": [
       "Nie mozesz tu ustawic statku!"
@@ -41,7 +42,8 @@
       "AlreadyShot": "Nietrafiony strzal"
     },
     "TopMessages": [
-      "Strzalki do gory, w dol, w lewo i w prawo - wybranie miejsca do strzalu.\nU - cofnij, enter - strzal, Esc - powrot do menu.",
+      "Strzalki do gory, w dol, w lewo i w prawo - wybranie miejsca do strzalu.",
+      "U - cofnij, Enter - strzal, Esc - powrot do menu.",
       "Nie trafiles!"
     ],
     "BottomMessages": [
@@ -52,7 +54,9 @@
       "Wygral gracz po lewej stronie!",
       "Wygral gracz po prawej stronie!",
       "Nie mozesz strzelac w to miejsce!",
-      "Komputer nie trafil!"
+      "Komputer nie trafil!",
+      "!!! Wygrales !!!",
+      "!!! Komputer wygral !!!"
     ]
   }
 }

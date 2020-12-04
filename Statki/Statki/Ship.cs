@@ -13,7 +13,8 @@ namespace Battleship
 		private bool _isVertical;
 		private int[,] _shipCoord;
 		public int Size { get; }
-		public Ship (int coordX, int coordY, int size, int shipNumber, bool isVertical)
+
+		public Ship(int coordX, int coordY, int size, int shipNumber, bool isVertical)
 		{
 			_coordX = coordX;
 			_coordY = coordY;
@@ -36,7 +37,7 @@ namespace Battleship
 			_shipCoord = new int[Size, 2];
 			_shipNumber = shipNumber;
 			MakeShip();
-			for(int i = 0; i < Size; ++i)
+			for (int i = 0; i < Size; ++i)
 			{
 				_shipCoord[i, 1] = Convert.ToInt32(substrings[5 + i]);
 			}
@@ -57,7 +58,7 @@ namespace Battleship
 		}
 		public void UndoHit(int x, int y)
 		{
-			if (_left == 0) 
+			if (_left == 0)
 			{
 				UndoSunken();
 			}
@@ -69,7 +70,7 @@ namespace Battleship
 					_shipCoord[i, 1] = (int)State.Missed;
 					break;
 				}
-			}				
+			}
 			++_left;
 		}
 		public bool HitShip(int coordX, int coordY)
@@ -109,10 +110,10 @@ namespace Battleship
 			{
 				int x = _isVertical ? _shipCoord[i, 0] : _coordX;
 				int y = _isVertical ? _coordY : _shipCoord[i, 0];
-				return new Tuple<int, int> (x,y);				
+				return new Tuple<int, int>(x, y);
 			}
 		}
-		private void SinkShip()
+		public void SinkShip()
 		{
 			for (int i = 0; i < Size; ++i)
 			{

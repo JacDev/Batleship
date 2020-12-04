@@ -20,6 +20,8 @@ namespace Battleship
 		private LanguageOptions _languageOptions;
 		private readonly ILoggerService _loggerService;
 		private readonly IInputDevice _inputDevice;
+		private int _topMessageIndex = -1;
+		private int _bottomMessageIndex = -1;
 
 		public Window(LanguageOptions languageOptions, ILoggerService loggerService, IInputDevice inputDevice)
 		{
@@ -27,23 +29,33 @@ namespace Battleship
 			_loggerService = loggerService;
 			_inputDevice = inputDevice;
 		}
-
-		public void PrintBoard(IBoard leftBoard, IBoard rightBoard, bool duringAdding)
+		public void SetBottomMessage(int index)
+		{
+			_bottomMessageIndex = index;
+		}
+		public void SetTopMessage(int index)
+		{
+			_topMessageIndex = index;
+		}
+		public int GetBottomMessage()
+		{
+			return _bottomMessageIndex;
+		}
+		public void PrintBoard(IBoard leftBoard, IBoard rightBoard, bool duringAdding, bool hideLeft = false)
 		{
 			Console.Clear();
-			PrintWindowEdge(WindowEdge.Top);
+			PrintWindowEdgeWithMessages(WindowEdge.Top, duringAdding);
 			PrintUpDown();
 			for (int x = 0; x < BoardSize.Height; ++x)
 			{
 				PrintWindowEdge(WindowEdge.Left);
-				PrintLine(x, leftBoard, rightBoard, duringAdding);
+				PrintLine(x, leftBoard, rightBoard, duringAdding, hideLeft);
 				PrintWindowEdge(WindowEdge.Right);
 			}
 			PrintUpDown();
-			PrintWindowEdge(WindowEdge.Bottom);
-
+			PrintWindowEdgeWithMessages(WindowEdge.Bottom, duringAdding);
 		}
-		private void PrintLine(int lineNumber, IBoard leftBoard, IBoard rightBoard, bool duringAdding)
+		private void PrintLine(int lineNumber, IBoard leftBoard, IBoard rightBoard, bool duringAdding, bool hide = false)
 		{
 			try
 			{
@@ -51,11 +63,11 @@ namespace Battleship
 				PrintFrame();
 				for (int y = 0; y < BoardSize.Width; ++y)
 				{
-					PrintShipArea(leftBoard.GetField(lineNumber, y));
+					PrintShipArea(leftBoard.GetField(lineNumber, y), hide);
 				}
-				int currentMessagesLenght = duringAdding ? _languageOptions.ChosenLanguage.DuringAdding.SignsMeaningList.Count: _languageOptions.ChosenLanguage.DuringGame.SignsMeaningList.Count;
 				PrintFrame();
 
+				int currentMessagesLenght = duringAdding ? _languageOptions.ChosenLanguage.DuringAdding.SignsMeaningList.Count : _languageOptions.ChosenLanguage.DuringGame.SignsMeaningList.Count;
 				var currentMessagesList = duringAdding ? _languageOptions.ChosenLanguage.DuringAdding.SignsMeaningList : _languageOptions.ChosenLanguage.DuringGame.SignsMeaningList;
 
 				if (lineNumber < currentMessagesLenght)
@@ -71,7 +83,7 @@ namespace Battleship
 				PrintFrame();
 				for (int y = 0; y < BoardSize.Width; ++y)
 				{
-					PrintShipArea(rightBoard.GetField(lineNumber, y));
+					PrintShipArea(rightBoard.GetField(lineNumber, y), true);
 				}
 				PrintFrame();
 			}
@@ -86,7 +98,6 @@ namespace Battleship
 			PrintShipArea(marker);
 			Console.Write(" -  " + message);
 			Console.Write("{0}", new string(WindowSize.BoardMarker, WindowSize.SpaceBeetweenBoardsSize - WindowSize.DoubleBoardMarker.Length * 4 - message.Length));
-
 		}
 		private void PrintFrame()
 		{
@@ -143,6 +154,57 @@ namespace Battleship
 					break;
 			}
 		}
+		private void PrintWindowEdgeWithMessages(WindowEdge windowEdge, bool duringAdding)
+		{
+			switch (windowEdge)
+			{
+				case WindowEdge.Top:
+					Console.BackgroundColor = ConsoleColor.White;
+					Console.WriteLine(_windowEdge);
+					Console.BackgroundColor = ConsoleColor.Black;
+					var topMessage1 = duringAdding ? _languageOptions.ChosenLanguage.DuringAdding.TopMessages[0] : _languageOptions.ChosenLanguage.DuringGame.TopMessages[0];
+					var topMessage2 = duringAdding ? _languageOptions.ChosenLanguage.DuringAdding.TopMessages[1] : _languageOptions.ChosenLanguage.DuringGame.TopMessages[1];
+					PrintTopBottomMessage(topMessage1);
+					PrintTopBottomMessage(topMessage2);
+					for (int i = 0; i < WindowSize.SeparatorSize - 2; ++i)
+					{
+						PrintSideEdge();
+					}
+					break;
+				case WindowEdge.Bottom:
+					int linesOfMessages = 0;
+
+					if (_bottomMessageIndex != -1)
+					{
+						var bottmMessage = duringAdding ? _languageOptions.ChosenLanguage.DuringAdding.BottomMessages[_bottomMessageIndex] : _languageOptions.ChosenLanguage.DuringGame.BottomMessages[_bottomMessageIndex];
+						PrintTopBottomMessage(bottmMessage);
+						linesOfMessages = 1;
+					}
+
+					for (int i = 0; i < WindowSize.SeparatorSize - linesOfMessages; ++i)
+					{
+						PrintSideEdge();
+					}
+
+					Console.BackgroundColor = ConsoleColor.White;
+					Console.WriteLine(_windowEdge);
+					Console.BackgroundColor = ConsoleColor.Black;
+					break;
+			}
+		}
+		private void PrintTopBottomMessage(string message)
+		{
+			Console.BackgroundColor = ConsoleColor.White;
+			Console.Write(WindowSize.DoubleBoardMarker);
+			Console.BackgroundColor = ConsoleColor.Black;
+			var leftSideSep = (int)Math.Ceiling((double)(_windowEdge.Length - 2 * WindowSize.OneBlockWidth - message.Length) / 2);
+			var rightSideSep = (int)Math.Floor((double)(_windowEdge.Length - 2 * WindowSize.OneBlockWidth - message.Length) / 2);
+			Console.Write("{0}{1}{2}", new string(' ', leftSideSep), message, new string(' ', rightSideSep));
+			//Console.Write("{0}", new string(WindowSize.BoardMarker, WindowSize.SpaceBeetweenBoardsSize - WindowSize.DoubleBoardMarker.Length * 4 - message.Length));
+			Console.BackgroundColor = ConsoleColor.White;
+			Console.WriteLine(WindowSize.DoubleBoardMarker);
+			Console.BackgroundColor = ConsoleColor.Black;
+		}
 		private void PrintSideEdge()
 		{
 			Console.BackgroundColor = ConsoleColor.White;
@@ -153,13 +215,19 @@ namespace Battleship
 			Console.WriteLine(WindowSize.DoubleBoardMarker);
 			Console.BackgroundColor = ConsoleColor.Black;
 		}
-		private void PrintShipArea(int index)
+		private void PrintShipArea(int index, bool hideShip = false)
 		{
 			Console.BackgroundColor = ConsoleColor.Black;
 			switch (index)
 			{
 				case int i when (i >= (int)Marker.FirstShip && i <= (int)Marker.LastShip):
-					Console.BackgroundColor = ConsoleColor.DarkBlue;
+					if (hideShip)
+					{
+						Console.BackgroundColor = ConsoleColor.Cyan;
+					}
+					else { 
+						Console.BackgroundColor = ConsoleColor.DarkBlue; 
+					}
 					break;
 				case int i when (i >= (int)Marker.FirstHitShip && i <= (int)Marker.LastHitShip):
 					Console.BackgroundColor = ConsoleColor.DarkRed;
@@ -193,7 +261,7 @@ namespace Battleship
 			//Console.Write(index + " "); //for debuging
 			Console.Write(WindowSize.DoubleBoardMarker);
 			Console.BackgroundColor = ConsoleColor.Black;
-		}	
+		}
 		public int ChoseLanguage()
 		{
 			while (ShowMenuOptions(_languageOptions.AvailableLanguages.Languages)) ;

@@ -55,6 +55,10 @@ namespace Battleship
 				Board.SetField(shipCoord.Item1, shipCoord.Item2, shipNumber + 10 * PlayerShips[shipNumber].GetFieldMark(i));
 			}
 		}
+		public void SinkShip(int shipNumber)
+		{
+			PlayerShips[shipNumber].SinkShip();
+		}
 		virtual public void MarkShipNeighborhood(bool isSink, int shipNumber)
 		{
 			int mark = isSink ? (int)Marker.NearSunkenShip : (int)Marker.NearShip;
