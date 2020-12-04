@@ -26,7 +26,8 @@ namespace Battleship
 			{
 				string filePath = "LanguageData" + Path.DirectorySeparatorChar + language + ".json";
 				ChosenLanguage = ReadFromJson<ChosenLanguageModel>(filePath);
-				ChosenLanguage.SignsMeaningList = ChosenLanguage.SignsMeaning.Select(x => Tuple.Create(x.Key, x.Value)).ToList();
+				ChosenLanguage.DuringAdding.SignsMeaningList = ChosenLanguage.DuringAdding.SignsMeaning.Select(x => Tuple.Create(x.Key, x.Value)).ToList();
+				ChosenLanguage.DuringGame.SignsMeaningList = ChosenLanguage.DuringGame.SignsMeaning.Select(x => Tuple.Create(x.Key, x.Value)).ToList();
 			}
 			catch(Exception ex)
 			{

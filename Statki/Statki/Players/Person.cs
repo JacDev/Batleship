@@ -48,13 +48,13 @@ namespace Battleship
 			bool afterLoad = false)
 			: base(boardNum, Players.Person, opponent, outputDevice)
 		{
-			if (!afterLoad)
-			{
-				//AddShips();
-				AddShipsTest();
-			}
 			_shots = new Stack<ShotEvent>();
 			_inputDevice = inputDevice;
+			if (!afterLoad)
+			{
+				AddShips();
+				//AddShipsTest();
+			}
 		}
 		public override Actions Shoot()
 		{
@@ -72,14 +72,15 @@ namespace Battleship
 
 					Player leftPlayer = WhichBoard == BoardSide.Left ? this : Opponent;
 					Player rightPlayer = WhichBoard == BoardSide.Right ? this : Opponent;
-					_outputDevice.PrintBoard(leftPlayer.Board, rightPlayer.Board);
+
+					_outputDevice.PrintBoard(leftPlayer.Board, rightPlayer.Board, false);
 
 					Opponent.Board.SetField(_x, _y, selectedField);
 
 					shoot = ReadKeyforShoot();
 					if (shoot == LoadedAction.BackToMenu)
 					{
-						return Actions.BACK_TO_MENU;
+						return Actions.BackToMenu;
 					}
 					else if (shoot == LoadedAction.Undo)
 					{
@@ -89,12 +90,12 @@ namespace Battleship
 
 				if(MarkField(selectedField, ref wasHit))
 				{
-					return Actions.END_GAME;
+					return Actions.EndGame;
 				}
 				_shots.Push(new ShotEvent(_x, _y, selectedField, wasHit, this));
 			} while (wasHit);
 			_shots.Clear();
-			return Actions.MISSED;
+			return Actions.Missed;
 		}
 		private bool CanShoot(int selectedField)
 		{
@@ -134,13 +135,14 @@ namespace Battleship
 		private void UndoAdded(int shipNumb, bool deleteAll)
 		{
 			UndoAddedShip(shipNumb);
+			Board.ClearBoard();
 			if (!deleteAll)
 			{
-				Board.ClearBoard();	
-			}
-			else
-			{
-				DrawShip(shipNumb);
+				for (int i = 0; i < shipNumb; ++i)
+				{
+					DrawShip(i);
+					MarkShipNeighborhood(false, i);
+				}
 			}
 		}
 		public void UndoAddedShip(int shipNumb)
@@ -266,8 +268,8 @@ namespace Battleship
 			for (; shipNumb < _shipSize.Length; ++shipNumb)
 			{
 				int currSize = _shipSize[shipNumb];
-				bool couldAdd = false;
-				bool isFit = true;
+				bool couldAdd;
+				bool isFit;
 				bool isVertical = false;
 				y = (y + currSize > BoardSize.Width) ? BoardSize.LeftEdge : y;
 
@@ -280,6 +282,7 @@ namespace Battleship
 				} while (!couldAdd || !isFit);
 				PlayerShips[shipNumb] = new Ship(x, y, currSize, shipNumb, isVertical);
 				DrawShip(shipNumb);
+				MarkShipNeighborhood(false, shipNumb);
 			}
 			Board.ClearNearShipMarks();
 		}
@@ -325,8 +328,8 @@ namespace Battleship
 						{
 							if (shipNumb > 0)
 							{
-								PlayerShips[shipNumb] = null;
-								UndoAdded(shipNumb, key == Keys.Clear);
+								UndoAdded(shipNumb - 1, key == Keys.Clear);
+								PlayerShips[shipNumb-1] = null;
 								--shipNumb;
 							}
 						} while (shipNumb > 0 && key != Keys.Undo);
@@ -371,7 +374,7 @@ namespace Battleship
 			}
 			Player leftPlayer = WhichBoard == BoardSide.Left ? this : Opponent;
 			Player rightPlayer = WhichBoard == BoardSide.Right ? this : Opponent;
-			_outputDevice.PrintBoard(leftPlayer.Board, rightPlayer.Board);
+			_outputDevice.PrintBoard(leftPlayer.Board, rightPlayer.Board, true);
 			for (int i = 0, j = 0; i < currSize && j < currSize;)
 			{
 				int changedFiled = isVertical ? j : i;

@@ -6,14 +6,15 @@ using System.Threading;
 
 namespace Battleship
 {
-	public enum Actions : int { BACK_TO_MENU = -1, MISSED, END_GAME, UNDO }
+	public enum Actions : int { BackToMenu = -1, Missed, EndGame, Undo }
 
 	public class Game
 	{
 
-		private int chosenOption;
-		private Player leftPlayer = null, rightPlayer = null;
-		private BoardSide whoseTurn;
+		private int _chosenOption;
+		private Player _leftPlayer = null;
+		private Player _rightPlayer = null;
+		private BoardSide _whoseTurn;
 		private readonly ChosenLanguageModel _chosenLanguage;
 		private readonly IOutputDevice _outputDevice;
 		private readonly IInputDevice _inputDevice;
@@ -31,29 +32,30 @@ namespace Battleship
 			bool closeWindow = false;
 			while (!closeWindow)
 			{
-				chosenOption = _outputDevice.ShowMenu(!_canLoadGame);
+				_chosenOption = _outputDevice.ShowMenu(!_canLoadGame);
 				bool endGame = false;
-				switch (chosenOption)
+				switch (_chosenOption)
 				{
 					case 0:
 						{
 							EndCurrentGame();
-							leftPlayer = new Person(_outputDevice, BoardSide.Left, _inputDevice);
-							rightPlayer = new Computer(_outputDevice, BoardSide.Right, leftPlayer);
-							leftPlayer.Opponent = rightPlayer;
+
+							_rightPlayer = new Computer(_outputDevice, BoardSide.Right);
+							_leftPlayer = new Person(_outputDevice, BoardSide.Left, _inputDevice, _rightPlayer);
+							_rightPlayer.Opponent = _leftPlayer;
 							_canLoadGame = true;
-							whoseTurn = BoardSide.Left;
+							_whoseTurn = BoardSide.Left;
 							endGame = Play();
 							break;
 						}
 					case 1:
 						{
 							EndCurrentGame();
-							leftPlayer = new Person(_outputDevice, BoardSide.Left, _inputDevice);
-							rightPlayer = new Person(_outputDevice, BoardSide.Right, _inputDevice, leftPlayer);
-							leftPlayer.Opponent = rightPlayer;
+							_leftPlayer = new Person(_outputDevice, BoardSide.Left, _inputDevice);
+							_rightPlayer = new Person(_outputDevice, BoardSide.Right, _inputDevice, _leftPlayer);
+							_leftPlayer.Opponent = _rightPlayer;
 							_canLoadGame = true;
-							whoseTurn = BoardSide.Left;
+							_whoseTurn = BoardSide.Left;
 							endGame = Play();
 							break;
 						}
@@ -88,25 +90,25 @@ namespace Battleship
 			Player winer;
 			while (true)
 			{
-				Player currentPlayer = whoseTurn == BoardSide.Left ? leftPlayer : rightPlayer;
+				Player currentPlayer = _whoseTurn == BoardSide.Left ? _leftPlayer : _rightPlayer;
 				Actions currentPlayerAction = currentPlayer.Shoot();
-				leftPlayer.SunkenShips = 9;
-				if (currentPlayerAction == Actions.END_GAME)
+				_leftPlayer.SunkenShips = 9;
+				if (currentPlayerAction == Actions.EndGame)
 				{
 					winer = currentPlayer;
 					break;
 				}
-				else if (currentPlayerAction == Actions.BACK_TO_MENU)
+				else if (currentPlayerAction == Actions.BackToMenu)
 				{
 					return false;
 				}
 				else
 				{
-					whoseTurn = whoseTurn == BoardSide.Left ? BoardSide.Right : BoardSide.Left;
+					_whoseTurn = _whoseTurn == BoardSide.Left ? BoardSide.Right : BoardSide.Left;
 				}
 			}
 
-			_outputDevice.PrintBoard(leftPlayer.Board, rightPlayer.Board);
+			_outputDevice.PrintBoard(_leftPlayer.Board, _rightPlayer.Board, false);
 			if (winer.WhichBoard == BoardSide.Left)
 			{
 				Console.WriteLine(("Wygrales").PadRight(40, ' '));
@@ -117,15 +119,15 @@ namespace Battleship
 		}
 		private void EndCurrentGame()
 		{
-			if (rightPlayer != null)
+			if (_rightPlayer != null)
 			{
-				rightPlayer.Board.ClearBoard();
+				_rightPlayer.Board.ClearBoard();
 			}
-			if (leftPlayer != null)
+			if (_leftPlayer != null)
 			{
-				leftPlayer.Board.ClearBoard();
+				_leftPlayer.Board.ClearBoard();
 			}
-			rightPlayer = leftPlayer = null;
+			_rightPlayer = _leftPlayer = null;
 		}
 		public void ReadEnter()
 		{
@@ -137,12 +139,10 @@ namespace Battleship
 		{
 			string directory = Directory.GetCurrentDirectory();
 			Console.WriteLine(directory);
-			using (StreamWriter outputFile = File.CreateText(Path.Combine(directory, "savedGame.txt")))
-			{
-				outputFile.WriteLine(leftPlayer.IsPerson().ToString() + " " + rightPlayer.IsPerson().ToString() + " " + leftPlayer.SunkenShips + " " + rightPlayer.SunkenShips + " " + whoseTurn.ToString() + " ");
-				outputFile.WriteLine(leftPlayer.GetShipsAsString() + rightPlayer.GetShipsAsString() + leftPlayer.Board.ToString() +"\n"+ rightPlayer.Board.ToString());
-				outputFile.Close();
-			}
+			using StreamWriter outputFile = File.CreateText(Path.Combine(directory, "savedGame.txt"));
+			outputFile.WriteLine(_leftPlayer.IsPerson().ToString() + " " + _rightPlayer.IsPerson().ToString() + " " + _leftPlayer.SunkenShips + " " + _rightPlayer.SunkenShips + " " + _whoseTurn.ToString() + " ");
+			outputFile.WriteLine(_leftPlayer.GetShipsAsString() + _rightPlayer.GetShipsAsString() + _leftPlayer.Board.ToString() + "\n" + _rightPlayer.Board.ToString());
+			outputFile.Close();
 		}
 		private bool LoadGame()
 		{
@@ -158,15 +158,15 @@ namespace Battleship
 
 				for (int i = 0; i < 10; ++i)
 				{
-					leftPlayer.AddShipAfterLoadGame(reader.ReadLine(), i);
+					_leftPlayer.AddShipAfterLoadGame(reader.ReadLine(), i);
 				}
 				for (int i = 0; i < 10; ++i)
 				{
-					rightPlayer.AddShipAfterLoadGame(reader.ReadLine(), i);
+					_rightPlayer.AddShipAfterLoadGame(reader.ReadLine(), i);
 				}
 
-				(leftPlayer.Board as ILoadable).ReadFromString(reader.ReadLine());
-				(rightPlayer.Board as ILoadable).ReadFromString(reader.ReadLine());
+				(_leftPlayer.Board as ILoadable).ReadFromString(reader.ReadLine());
+				(_rightPlayer.Board as ILoadable).ReadFromString(reader.ReadLine());
 				return true;
 			}
 			return false;
@@ -176,16 +176,16 @@ namespace Battleship
 			char separator = ' ';
 			string[] substrings = line.Split(separator);
 
-			leftPlayer = MakePlayer(substrings[0], BoardSide.Left);
-			rightPlayer = MakePlayer(substrings[1], BoardSide.Right);
-			leftPlayer.Opponent = rightPlayer;
-			rightPlayer.Opponent = leftPlayer;
+			_leftPlayer = CreatePlayer(substrings[0], BoardSide.Left);
+			_rightPlayer = CreatePlayer(substrings[1], BoardSide.Right);
+			_leftPlayer.Opponent = _rightPlayer;
+			_rightPlayer.Opponent = _leftPlayer;
 
-			leftPlayer.SunkenShips = Convert.ToInt32(substrings[2]);
-			rightPlayer.SunkenShips = Convert.ToInt32(substrings[3]);
-			whoseTurn = substrings[4] == "Left"? BoardSide.Left : BoardSide.Right;
+			_leftPlayer.SunkenShips = Convert.ToInt32(substrings[2]);
+			_rightPlayer.SunkenShips = Convert.ToInt32(substrings[3]);
+			_whoseTurn = substrings[4] == "Left"? BoardSide.Left : BoardSide.Right;
 		}
-		private Player MakePlayer(string isPerson, BoardSide side)
+		private Player CreatePlayer(string isPerson, BoardSide side)
 		{
 			if(isPerson == "True")
 			{

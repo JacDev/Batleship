@@ -93,15 +93,15 @@ namespace Battleship
 				}
 				if (SunkenShips == 10)
 				{
-					return Actions.END_GAME;
+					return Actions.EndGame;
 				}
 				Player leftPlayer = WhichBoard == BoardSide.Left ? this : Opponent;
 				Player rightPlayer = WhichBoard == BoardSide.Right ? this : Opponent;
-				_outputDevice.PrintBoard(leftPlayer.Board, rightPlayer.Board);
+				_outputDevice.PrintBoard(leftPlayer.Board, rightPlayer.Board, false);
 
 				Thread.Sleep(1000);
 			} while (wasHit);
-			return Actions.MISSED;
+			return Actions.Missed;
 		}
 		private bool ShotAfterCoordDraw()
 		{

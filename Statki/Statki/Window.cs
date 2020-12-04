@@ -28,7 +28,7 @@ namespace Battleship
 			_inputDevice = inputDevice;
 		}
 
-		public void PrintBoard(IBoard leftBoard, IBoard rightBoard)
+		public void PrintBoard(IBoard leftBoard, IBoard rightBoard, bool duringAdding)
 		{
 			Console.Clear();
 			PrintWindowEdge(WindowEdge.Top);
@@ -36,14 +36,14 @@ namespace Battleship
 			for (int x = 0; x < BoardSize.Height; ++x)
 			{
 				PrintWindowEdge(WindowEdge.Left);
-				PrintLine(x, leftBoard, rightBoard);
+				PrintLine(x, leftBoard, rightBoard, duringAdding);
 				PrintWindowEdge(WindowEdge.Right);
 			}
 			PrintUpDown();
 			PrintWindowEdge(WindowEdge.Bottom);
 
 		}
-		private void PrintLine(int lineNumber, IBoard leftBoard, IBoard rightBoard)
+		private void PrintLine(int lineNumber, IBoard leftBoard, IBoard rightBoard, bool duringAdding)
 		{
 			try
 			{
@@ -53,13 +53,16 @@ namespace Battleship
 				{
 					PrintShipArea(leftBoard.GetField(lineNumber, y));
 				}
-
+				int currentMessagesLenght = duringAdding ? _languageOptions.ChosenLanguage.DuringAdding.SignsMeaningList.Count: _languageOptions.ChosenLanguage.DuringGame.SignsMeaningList.Count;
 				PrintFrame();
-				if (lineNumber < _languageOptions.ChosenLanguage.SignsMeaningList.Count)
+
+				var currentMessagesList = duringAdding ? _languageOptions.ChosenLanguage.DuringAdding.SignsMeaningList : _languageOptions.ChosenLanguage.DuringGame.SignsMeaningList;
+
+				if (lineNumber < currentMessagesLenght)
 				{
-					string markerName = vall.FirstOrDefault(x => x.Equals(_languageOptions.ChosenLanguage.SignsMeaningList.ElementAt(lineNumber).Item1));
+					string markerName = vall.FirstOrDefault(x => x.Equals(currentMessagesList.ElementAt(lineNumber).Item1));
 					int markerValue = (int)Enum.Parse(typeof(Marker), markerName);
-					PrintMessage(_languageOptions.ChosenLanguage.SignsMeaningList[lineNumber].Item2, markerValue);
+					PrintMessage(currentMessagesList.ElementAt(lineNumber).Item2, markerValue);
 				}
 				else
 				{
@@ -190,8 +193,7 @@ namespace Battleship
 			//Console.Write(index + " "); //for debuging
 			Console.Write(WindowSize.DoubleBoardMarker);
 			Console.BackgroundColor = ConsoleColor.Black;
-		}
-		
+		}	
 		public int ChoseLanguage()
 		{
 			while (ShowMenuOptions(_languageOptions.AvailableLanguages.Languages)) ;
@@ -271,7 +273,7 @@ namespace Battleship
 					}
 			}
 			Thread.Sleep(200);
-			_inputDevice.ClearStram();
+			//_inputDevice.ClearStram();
 			return true;
 		}
 	}

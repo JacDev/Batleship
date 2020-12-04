@@ -31,9 +31,8 @@ namespace Battleship
 			{
 				return _board[indx * BoardSize.Width + indy];
 			}
-			return -1; //add throwing exception
+			throw new ArgumentOutOfRangeException("Field ({1};{2}) is outside the board.", indx.ToString(), indy.ToString());
 		}
-
 		public void SetField(int indx, int indy, int value)
 		{
 			if (IsInBoard(indx, indy))
@@ -111,8 +110,6 @@ namespace Battleship
 		public void ClearBoard()
 		{
 			_board = Enumerable.Repeat((int)Marker.EmptyField, BoardSize.Height * BoardSize.Width).ToArray();
-		}
-
-		
+		}		
 	}
 }

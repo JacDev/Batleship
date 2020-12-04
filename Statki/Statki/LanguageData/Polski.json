@@ -15,33 +15,44 @@
     "NIE UDALO SIE ZAPISAC GRY.\n",
     "ZAPISANO GRE POMYSLNIE.\n"
   ],
-  "SignsMeaning": {
-    "FirstShip": "Ustawiony statek",
-    "FirstHitShip": "Trafiony statek",
-    "FirstSunkShip": "Zatopiony statek",
-    "CannotAdd": "Nie mozna ustawic statku",
-    "NearShip": "Pole w poblizu statku",
-    "ChosenToShoot": "Wybrane do strzalu",
-    "CannotShoot": "Tu nie mozna strzelic",
-    "AlreadyShot": "Nietrafiony strzal",
-    "ChosenToAdd": "Pole do ustawienia statku"
+  "DuringAdding": {
+    "SignsMeaning": {
+      "FirstShip": "Ustawiony statek",
+      "CannotAdd": "Nie mozna ustawic statku",
+      "ChosenToAdd": "Pole do ustawienia statku",
+      "NearShip": "Pole w poblizu statku"
+    },
+    "TopMessages": [
+      "Strzalki do gory, w dol, w lewo i w prawo - przemieszczanie stateku na planszy.\nR - rotacja statku, enter - dodanie statku.",
+      "Jeden z graczy musi sie odwrocic, zeby drugi mogl dodac statki!\nNacisnij Eeter, aby kontynuowac.",
+      "Teraz niech drugi z graczy sie odwroci!\nNacisnij Enter, aby kontynuowac."
+    ],
+    "BottomMessages": [
+      "Nie mozesz tu ustawic statku!"
+    ]
   },
-  "TopMessages": [
-    "Strzalki do gory, w dol, w lewo i w prawo - przemieszczanie stateku na planszy.\nR - rotowanie statku, Enter - dodanie statku.",
-    "Strzalki do gory, w dol, w lewo i w prawo - wybranie miejsca do strzalu.\nEnter - strzal, Esc - powrot do menu.",
-    "Jeden z graczy musi sie odwrocic, zeby drugi mogl dodac Battleship!\nNacisnij Enter, aby kontynuowac.",
-    "Teraz niech drugi z graczy sie odwroci!\nNacisnij Enter, aby kontynuowac.",
-    "Nie trafiles!"
-  ],
-  "BottomMessages": [
-    "Trafiles statek przeciwnika!",
-    "Zostales trafiony!",
-    "Twoj statek zostal zatopiony!",
-    "Zatopiles statek przeciwnika!",
-    "Wygral gracz po lewej stronie!",
-    "Wygral gracz po prawej stronie!",
-    "Nie mozesz tu ustawic statku!",
-    "Nie mozesz strzelac w to miejsce!",
-    "Komputer nie trafil!"
-  ]
+  "DuringGame": {
+    "SignsMeaning": {
+      "FirstShip": "Ustawiony statek",
+      "FirstHitShip": "Trafiony statek",
+      "FirstSunkShip": "Zatopiony statek",
+      "ChosenToShoot": "Wybrane do strzalu",
+      "CannotShoot": "Tu nie mozna strzelic",
+      "AlreadyShot": "Nietrafiony strzal"
+    },
+    "TopMessages": [
+      "Strzalki do gory, w dol, w lewo i w prawo - wybranie miejsca do strzalu.\nU - cofnij, enter - strzal, Esc - powrot do menu.",
+      "Nie trafiles!"
+    ],
+    "BottomMessages": [
+      "Trafiles statek przeciwnika!",
+      "Zostales trafiony!",
+      "Twoj statek zostal zatopiony!",
+      "Zatopiles statek przeciwnika!",
+      "Wygral gracz po lewej stronie!",
+      "Wygral gracz po prawej stronie!",
+      "Nie mozesz strzelac w to miejsce!",
+      "Komputer nie trafil!"
+    ]
+  }
 }
