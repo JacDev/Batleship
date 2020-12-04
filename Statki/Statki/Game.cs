@@ -15,12 +15,14 @@ namespace Battleship
 		private Player leftPlayer = null, rightPlayer = null;
 		private BoardSide whoseTurn;
 		private readonly ChosenLanguageModel _chosenLanguage;
-		private readonly Window _window;
+		private readonly IOutputDevice _outputDevice;
+		private readonly IInputDevice _inputDevice;
 		private bool _canLoadGame;
-		public Game(ChosenLanguageModel chosenLanguage, Window window)
+		public Game(ChosenLanguageModel chosenLanguage, IOutputDevice outputDevice, IInputDevice inputDevice)
 		{
 			_chosenLanguage = chosenLanguage;
-			_window = window;
+			_outputDevice = outputDevice;
+			_inputDevice = inputDevice;
 			_canLoadGame = false;
 			MakeGame();
 		}
@@ -29,15 +31,15 @@ namespace Battleship
 			bool closeWindow = false;
 			while (!closeWindow)
 			{
-				chosenOption = _window.ShowMenu(!_canLoadGame);
+				chosenOption = _outputDevice.ShowMenu(!_canLoadGame);
 				bool endGame = false;
 				switch (chosenOption)
 				{
 					case 0:
 						{
 							EndCurrentGame();
-							leftPlayer = new Person(_window, BoardSide.Left);
-							rightPlayer = new Computer(_window, BoardSide.Right, leftPlayer);
+							leftPlayer = new Person(_outputDevice, BoardSide.Left, _inputDevice);
+							rightPlayer = new Computer(_outputDevice, BoardSide.Right, leftPlayer);
 							leftPlayer.Opponent = rightPlayer;
 							_canLoadGame = true;
 							whoseTurn = BoardSide.Left;
@@ -47,8 +49,8 @@ namespace Battleship
 					case 1:
 						{
 							EndCurrentGame();
-							leftPlayer = new Person(_window, BoardSide.Left);
-							rightPlayer = new Person(_window, BoardSide.Right, leftPlayer);
+							leftPlayer = new Person(_outputDevice, BoardSide.Left, _inputDevice);
+							rightPlayer = new Person(_outputDevice, BoardSide.Right, _inputDevice, leftPlayer);
 							leftPlayer.Opponent = rightPlayer;
 							_canLoadGame = true;
 							whoseTurn = BoardSide.Left;
@@ -104,7 +106,7 @@ namespace Battleship
 				}
 			}
 
-			_window.PrintBoard(leftPlayer.Board, rightPlayer.Board);
+			_outputDevice.PrintBoard(leftPlayer.Board, rightPlayer.Board);
 			if (winer.WhichBoard == BoardSide.Left)
 			{
 				Console.WriteLine(("Wygrales").PadRight(40, ' '));
@@ -128,7 +130,7 @@ namespace Battleship
 		public void ReadEnter()
 		{
 			Console.WriteLine("Press ENTER to continue\n");
-			while (_window.ReadKey() != Keys.Enter) ;
+			while (_inputDevice.ReadKey() != Keys.Enter) ;
 			Thread.Sleep(200);
 		}
 		private void SaveGame()
@@ -138,7 +140,7 @@ namespace Battleship
 			using (StreamWriter outputFile = File.CreateText(Path.Combine(directory, "savedGame.txt")))
 			{
 				outputFile.WriteLine(leftPlayer.IsPerson().ToString() + " " + rightPlayer.IsPerson().ToString() + " " + leftPlayer.SunkenShips + " " + rightPlayer.SunkenShips + " " + whoseTurn.ToString() + " ");
-				outputFile.WriteLine(leftPlayer.GetShipsAsString() + rightPlayer.GetShipsAsString() + leftPlayer.Board.GetBoardAsString() +"\n"+ rightPlayer.Board.GetBoardAsString());
+				outputFile.WriteLine(leftPlayer.GetShipsAsString() + rightPlayer.GetShipsAsString() + leftPlayer.Board.ToString() +"\n"+ rightPlayer.Board.ToString());
 				outputFile.Close();
 			}
 		}
@@ -162,8 +164,9 @@ namespace Battleship
 				{
 					rightPlayer.AddShipAfterLoadGame(reader.ReadLine(), i);
 				}
-				leftPlayer.Board.LoadBoardFromLine(reader.ReadLine());
-				rightPlayer.Board.LoadBoardFromLine(reader.ReadLine());
+
+				(leftPlayer.Board as ILoadable).ReadFromString(reader.ReadLine());
+				(rightPlayer.Board as ILoadable).ReadFromString(reader.ReadLine());
 				return true;
 			}
 			return false;
@@ -186,11 +189,11 @@ namespace Battleship
 		{
 			if(isPerson == "True")
 			{
-				return new Person(_window, side, afterLoad: true);
+				return new Person(_outputDevice, side, _inputDevice, afterLoad: true);
 			}
 			else
 			{
-				return new Computer(_window, side, afterLoad: true);			
+				return new Computer(_outputDevice, side, afterLoad: true);			
 			}
 		}
 	}

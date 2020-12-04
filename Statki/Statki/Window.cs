@@ -7,7 +7,7 @@ using System.Threading;
 namespace Battleship
 {
 	enum WindowEdge : int { Left, Right, Top, Bottom };
-	public class Window : IOutputDevice, IInputDevicee
+	public class Window : IOutputDevice
 	{
 		private readonly string _spaceBetweenBoards = new string(WindowSize.BoardMarker, WindowSize.SpaceBeetweenBoardsSize);
 		private readonly string _boardEdge = new string(WindowSize.BoardMarker, WindowSize.BoardEdgeSize);
@@ -19,14 +19,16 @@ namespace Battleship
 		private bool _isHighlighted = true;
 		private LanguageOptions _languageOptions;
 		private readonly ILoggerService _loggerService;
+		private readonly IInputDevice _inputDevice;
 
-		public Window(LanguageOptions languageOptions, ILoggerService loggerService)
+		public Window(LanguageOptions languageOptions, ILoggerService loggerService, IInputDevice inputDevice)
 		{
 			_languageOptions = languageOptions;
 			_loggerService = loggerService;
+			_inputDevice = inputDevice;
 		}
 
-		public void PrintBoard(Board leftBoard, Board rightBoard)
+		public void PrintBoard(IBoard leftBoard, IBoard rightBoard)
 		{
 			Console.Clear();
 			PrintWindowEdge(WindowEdge.Top);
@@ -41,7 +43,7 @@ namespace Battleship
 			PrintWindowEdge(WindowEdge.Bottom);
 
 		}
-		private void PrintLine(int line, Board leftBoard, Board rightBoard)
+		private void PrintLine(int lineNumber, IBoard leftBoard, IBoard rightBoard)
 		{
 			try
 			{
@@ -49,15 +51,15 @@ namespace Battleship
 				PrintFrame();
 				for (int y = 0; y < BoardSize.Width; ++y)
 				{
-					PrintShipArea(leftBoard[line, y]);
+					PrintShipArea(leftBoard.GetField(lineNumber, y));
 				}
 
 				PrintFrame();
-				if (line < _languageOptions.ChosenLanguage.SignsMeaningList.Count)
+				if (lineNumber < _languageOptions.ChosenLanguage.SignsMeaningList.Count)
 				{
-					string markerName = vall.FirstOrDefault(x => x.Equals(_languageOptions.ChosenLanguage.SignsMeaningList.ElementAt(line).Item1));
+					string markerName = vall.FirstOrDefault(x => x.Equals(_languageOptions.ChosenLanguage.SignsMeaningList.ElementAt(lineNumber).Item1));
 					int markerValue = (int)Enum.Parse(typeof(Marker), markerName);
-					PrintMessage(_languageOptions.ChosenLanguage.SignsMeaningList[line].Item2, markerValue);
+					PrintMessage(_languageOptions.ChosenLanguage.SignsMeaningList[lineNumber].Item2, markerValue);
 				}
 				else
 				{
@@ -66,11 +68,11 @@ namespace Battleship
 				PrintFrame();
 				for (int y = 0; y < BoardSize.Width; ++y)
 				{
-					PrintShipArea(rightBoard[line, y]);
+					PrintShipArea(rightBoard.GetField(lineNumber, y));
 				}
 				PrintFrame();
-			} 
-			catch(Exception ex)
+			}
+			catch (Exception ex)
 			{
 				_loggerService.Error(ex);
 			}
@@ -189,23 +191,7 @@ namespace Battleship
 			Console.Write(WindowSize.DoubleBoardMarker);
 			Console.BackgroundColor = ConsoleColor.Black;
 		}
-		public Keys ReadKey()
-		{
-			ConsoleKey key = Console.ReadKey(false).Key;
-			return key switch
-			{
-				ConsoleKey.UpArrow => Keys.Up,
-				ConsoleKey.DownArrow => Keys.Down,
-				ConsoleKey.LeftArrow => Keys.Left,
-				ConsoleKey.RightArrow => Keys.Right,
-				ConsoleKey.Enter => Keys.Enter,
-				ConsoleKey.Escape => Keys.Escape,
-				ConsoleKey.R => Keys.Rotate,
-				ConsoleKey.U => Keys.Undo,
-				ConsoleKey.C => Keys.Clear,
-				_ => Keys.None,
-			};
-		}
+		
 		public int ChoseLanguage()
 		{
 			while (ShowMenuOptions(_languageOptions.AvailableLanguages.Languages)) ;
@@ -223,12 +209,13 @@ namespace Battleship
 			int menuSize = hideLastMenuOptions ? options.Length - 2 : options.Length;
 			for (int i = 0; i < WindowSize.Height; i++)
 			{
-				
-				if (i < menuSize) {
+
+				if (i < menuSize)
+				{
 					PrintWindowEdge(WindowEdge.Left);
 					Console.Write(("")
-						.PadRight(WindowSize.BoardEdgeSize + WindowSize.SpaceBeetweenBoardsSize/2 - (int)Math.Floor(options[i].Length/2.0)
-						,WindowSize.BoardMarker));
+						.PadRight(WindowSize.BoardEdgeSize + WindowSize.SpaceBeetweenBoardsSize / 2 - (int)Math.Floor(options[i].Length / 2.0)
+						, WindowSize.BoardMarker));
 					if (i == _chosenOption)
 					{
 						if (_isHighlighted)
@@ -241,13 +228,13 @@ namespace Battleship
 						}
 						_isHighlighted = !_isHighlighted;
 					}
-					
+
 					Console.Write(options[i]);
 					Console.BackgroundColor = ConsoleColor.Black;
 					Console.ForegroundColor = ConsoleColor.White;
 					Console.Write(("")
-						.PadRight(WindowSize.BoardEdgeSize + WindowSize.SpaceBeetweenBoardsSize/2 - (int)Math.Ceiling(options[i].Length / 2.0)
-						,WindowSize.BoardMarker));
+						.PadRight(WindowSize.BoardEdgeSize + WindowSize.SpaceBeetweenBoardsSize / 2 - (int)Math.Ceiling(options[i].Length / 2.0)
+						, WindowSize.BoardMarker));
 					PrintWindowEdge(WindowEdge.Right);
 				}
 				else
@@ -261,9 +248,9 @@ namespace Battleship
 		private bool ReadOption(int size)
 		{
 			Keys key = Keys.None;
-			if (Console.KeyAvailable)
+			if (_inputDevice.KeyAvailable())
 			{
-				key = ReadKey();
+				key = _inputDevice.ReadKey();
 			}
 			switch (key)
 			{
@@ -284,6 +271,7 @@ namespace Battleship
 					}
 			}
 			Thread.Sleep(200);
+			_inputDevice.ClearStram();
 			return true;
 		}
 	}

@@ -1,4 +1,5 @@
 ﻿using Battleship.Consts;
+using Battleship.Interfaces;
 using System;
 using System.Linq;
 using System.Text;
@@ -11,7 +12,7 @@ namespace Battleship
 		ChosenToAdd, NearShip, CannotAdd, ChosenToShoot, AlreadyShot, CannotShoot, NearSunkenShip
 	};
 
-	public class Board
+	public class Board : IBoard, ILoadable
 	{
 		private int[] _board;
 
@@ -20,25 +21,37 @@ namespace Battleship
 			_board = new int[BoardSize.Height * BoardSize.Width];
 			_board = Enumerable.Repeat((int)Marker.EmptyField, BoardSize.Height * BoardSize.Width).ToArray();
 		}
-		public int this[int indx, int indy]
+		public int[] GetBoard()
 		{
-			get
+			return _board;
+		}
+		public int GetField(int indx, int indy)
+		{
+			if (IsInBoard(indx, indy))
 			{
-				if (IsInBoard(indx, indy))
-				{
-					return _board[indx * BoardSize.Width + indy];
-				}
-				return -1; //add throwing exception
+				return _board[indx * BoardSize.Width + indy];
 			}
-			set
+			return -1; //add throwing exception
+		}
+
+		public void SetField(int indx, int indy, int value)
+		{
+			if (IsInBoard(indx, indy))
 			{
-				if (IsInBoard(indx, indy))
+				_board[indx * BoardSize.Width + indy] = value;
+			}
+		}
+		public void SetFieldIf(int x, int y, int val, int condition)
+		{
+			if (IsInBoard(x, y))
+			{
+				if (GetField(x, y) == condition)
 				{
-					_board[indx * BoardSize.Width + indy] = value;
+					SetField(x, y, val);
 				}
 			}
 		}
-		public string GetBoardAsString()
+		public override string ToString()
 		{
 			StringBuilder result = new StringBuilder(string.Empty);
 			for (int i = 0; i < BoardSize.Height * BoardSize.Width; i++)
@@ -48,7 +61,7 @@ namespace Battleship
 			}
 			return result.ToString();
 		}
-		public void LoadBoardFromLine(string line)
+		public void ReadFromString(string line)
 		{
 			if (line != string.Empty)
 			{
@@ -60,7 +73,7 @@ namespace Battleship
 					{
 						for (int j = 0; j < BoardSize.Width; ++j)
 						{
-							this[i, j] = Convert.ToInt32(substrings[i * BoardSize.Width + j]);
+							SetField(i, j, Convert.ToInt32(substrings[i * BoardSize.Width + j]));
 						}
 					}
 				}
@@ -82,25 +95,15 @@ namespace Battleship
 				return false;
 			}
 		}
-		public void SetAreaIf(int x, int y, int val, int condition)
-		{
-			if(IsInBoard(x, y))
-			{
-				if (this[x, y] == condition)
-				{
-					this[x, y] = val;
-				}
-			}
-		}
 		public void ClearNearShipMarks()
 		{
 			for (int x = 0; x < BoardSize.Height; ++x)
 			{
 				for (int y = 0; y < BoardSize.Width; ++y)
 				{
-					if (this[x, y] == (int)Marker.NearShip)
+					if (GetField(x, y) == (int)Marker.NearShip)
 					{
-						this[x, y] = (int)Marker.EmptyField;
+						SetField(x, y, (int)Marker.EmptyField);
 					}
 				}
 			}
@@ -109,5 +112,7 @@ namespace Battleship
 		{
 			_board = Enumerable.Repeat((int)Marker.EmptyField, BoardSize.Height * BoardSize.Width).ToArray();
 		}
+
+		
 	}
 }

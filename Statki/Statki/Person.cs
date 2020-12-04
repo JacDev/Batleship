@@ -33,15 +33,20 @@ namespace Battleship
 				}
 				else
 				{
-					_player.Opponent.Board[CoordX, CoordY] = (int)Marker.EmptyField;
+					_player.Opponent.Board.SetField(CoordX, CoordY, (int)Marker.EmptyField);
 				}
 				return this;
 			}
 		}
+		private readonly IInputDevice _inputDevice;
 		private enum LoadedAction : int { BackToMenu = -1, DontShot, Shot, Undo }
 		private Stack<ShotEvent> _shots;
-		public Person(Window window, BoardSide boardNum, Player opponent = null, bool afterLoad = false) 
-			: base(boardNum, Players.Person, opponent, window)
+		public Person(IOutputDevice outputDevice, 
+			BoardSide boardNum,
+			IInputDevice inputDevice,
+			Player opponent = null, 
+			bool afterLoad = false)
+			: base(boardNum, Players.Person, opponent, outputDevice)
 		{
 			if (!afterLoad)
 			{
@@ -49,6 +54,7 @@ namespace Battleship
 				AddShipsTest();
 			}
 			_shots = new Stack<ShotEvent>();
+			_inputDevice = inputDevice;
 		}
 		public override Actions Shoot()
 		{
@@ -61,14 +67,14 @@ namespace Battleship
 				LoadedAction shoot;
 				do
 				{
-					selectedField = Opponent.Board[_x, _y];
+					selectedField = Opponent.Board.GetField(_x, _y);
 					canShoot = CanShoot(selectedField);
 
 					Player leftPlayer = WhichBoard == BoardSide.Left ? this : Opponent;
 					Player rightPlayer = WhichBoard == BoardSide.Right ? this : Opponent;
-					_window.PrintBoard(leftPlayer.Board, rightPlayer.Board);
+					_outputDevice.PrintBoard(leftPlayer.Board, rightPlayer.Board);
 
-					Opponent.Board[_x, _y] = selectedField;
+					Opponent.Board.SetField(_x, _y, selectedField);
 
 					shoot = ReadKeyforShoot();
 					if (shoot == LoadedAction.BackToMenu)
@@ -94,12 +100,12 @@ namespace Battleship
 		{
 			if (selectedField >= (int)Marker.FirstShip && selectedField <= (int)Marker.LastShip || selectedField == (int)Marker.EmptyField)
 			{
-				Opponent.Board[_x, _y] = (int)Marker.ChosenToShoot;
+				Opponent.Board.SetField(_x, _y, (int)Marker.ChosenToShoot);
 				return true;
 			}
 			else
 			{
-				Opponent.Board[_x, _y] = (int)Marker.CannotShoot;
+				Opponent.Board.SetField(_x, _y, (int)Marker.CannotShoot);
 				return false;
 			}
 		}
@@ -121,7 +127,7 @@ namespace Battleship
 			}
 			else
 			{
-				Opponent.Board[_x, _y] = (int)Marker.AlreadyShot;
+				Opponent.Board.SetField(_x, _y, (int)Marker.AlreadyShot);
 			}
 			return false;
 		}
@@ -142,7 +148,7 @@ namespace Battleship
 			for (int i = 0; i < PlayerShips[shipNumb].Size; ++i)
 			{
 				(int coordX, int coordY) = PlayerShips[shipNumb][i];
-				Board[coordX, coordY] = (int)Marker.EmptyField;
+				Board.SetField(coordX, coordY, (int)Marker.EmptyField);
 			}
 			for (int i = 0; i < PlayerShips[shipNumb].Size; ++i)
 			{
@@ -150,7 +156,7 @@ namespace Battleship
 				for (int j = -1; j < 2; ++j)
 				{
 					for (int k = -1; k < 2; ++k)
-						Board[coordX, coordY] = (int)Marker.EmptyField;
+						Board.SetField(coordX, coordY, (int)Marker.EmptyField);
 				}
 			}
 		}
@@ -174,7 +180,7 @@ namespace Battleship
 			bool isLoaded = false;
 			while (!isLoaded)
 			{
-				Keys key = _window.ReadKey();
+				Keys key = _inputDevice.ReadKey();
 				switch (key)
 				{
 					case Keys.Down:
@@ -233,9 +239,9 @@ namespace Battleship
 				}
 			}
 			Thread.Sleep(100);
+			_inputDevice.ClearStram();
 			return LoadedAction.DontShot;
 		}
-
 		private void AddShipsTest()
 		{
 			for (int i = 0; i < 5; i++)
@@ -294,7 +300,7 @@ namespace Battleship
 		}
 		private bool ReadKey(ref int x, ref int y, int currSize, ref bool isVertical, ref int shipNumb)
 		{
-			Keys key = _window.ReadKey();
+			Keys key = _inputDevice.ReadKey();
 			switch (key)
 			{
 				case Keys.Down:
@@ -330,6 +336,7 @@ namespace Battleship
 					return true;
 
 			}
+			_inputDevice.ClearStram();
 			return false;
 		}
 		private void RotateShip(ref int x, ref int y, int size, ref bool isVertical)
@@ -349,13 +356,13 @@ namespace Battleship
 			bool isFit = true;
 			for (int i = 0, j = 0; i < currSize && j < currSize;)
 			{
-				if (Board[x + j, y + i] == (int)Marker.EmptyField)
-					Board[x + j, y + i] = (int)Marker.ChosenToAdd;
+				if (Board.GetField(x + j, y + i) == (int)Marker.EmptyField)
+					Board.SetField(x + j, y + i, (int)Marker.ChosenToAdd);
 				else
 				{
 					int changedFiled = isVertical ? j : i;
-					coveringFields[changedFiled] = Board[x + j, y + i];
-					Board[x + j, y + i] = (int)Marker.CannotAdd;
+					coveringFields[changedFiled] = Board.GetField(x + j, y + i);
+					Board.SetField(x + j, y + i, (int)Marker.CannotAdd);
 					isFit = false;
 
 				}
@@ -364,12 +371,12 @@ namespace Battleship
 			}
 			Player leftPlayer = WhichBoard == BoardSide.Left ? this : Opponent;
 			Player rightPlayer = WhichBoard == BoardSide.Right ? this : Opponent;
-			_window.PrintBoard(leftPlayer.Board, rightPlayer.Board);
+			_outputDevice.PrintBoard(leftPlayer.Board, rightPlayer.Board);
 			for (int i = 0, j = 0; i < currSize && j < currSize;)
 			{
 				int changedFiled = isVertical ? j : i;
-				int previousVal = Board[x + j, y + i] == (int)Marker.CannotAdd ? coveringFields[changedFiled] : (int)Marker.EmptyField;
-				Board[x + j, y + i] = previousVal;
+				int previousVal = Board.GetField(x + j, y + i) == (int)Marker.CannotAdd ? coveringFields[changedFiled] : (int)Marker.EmptyField;
+				Board.SetField(x + j, y + i, previousVal);
 				if (isVertical)
 				{
 					++j;

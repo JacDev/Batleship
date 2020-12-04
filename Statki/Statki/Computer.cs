@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Linq;
 using Battleship.Consts;
+using Battleship.Interfaces;
 
 namespace Battleship
 {
@@ -15,7 +16,7 @@ namespace Battleship
 		private bool _wasHitAfterChoosingDir;
 		private bool _sameDirection;
 
-		public Computer(Window window, BoardSide boardNum, Player opponent = null, bool afterLoad = false) : base(boardNum, Players.Computer, opponent, window)
+		public Computer(IOutputDevice outputDevice, BoardSide boardNum, Player opponent = null, bool afterLoad = false) : base(boardNum, Players.Computer, opponent, outputDevice)
 		{
 			if (!afterLoad)
 			{
@@ -60,7 +61,7 @@ namespace Battleship
 				{
 					int px = isVertical ? i : BoardSize.TopEdge;
 					int py = isVertical ? BoardSize.LeftEdge : i;
-					if (Board[x + px, y + py] != (int)Marker.EmptyField)
+					if (Board.GetField(x + px, y + py) != (int)Marker.EmptyField)
 					{
 						isFit = false;
 						break;
@@ -81,7 +82,8 @@ namespace Battleship
 					{
 						_lastX = _x = rnd.Next(BoardSize.Width);
 						_lastY = _y = rnd.Next(BoardSize.Height);
-					} while (Opponent.Board[_x, _y] != (int)Marker.EmptyField && Opponent.Board[_x, _y] > (int)Marker.LastShip);
+					} while (Opponent.Board.GetField(_x, _y) != (int)Marker.EmptyField 
+						&& Opponent.Board.GetField(_x, _y) > (int)Marker.LastShip);
 					wasHit = ShotAfterCoordDraw();
 				}
 				else
@@ -95,7 +97,7 @@ namespace Battleship
 				}
 				Player leftPlayer = WhichBoard == BoardSide.Left ? this : Opponent;
 				Player rightPlayer = WhichBoard == BoardSide.Right ? this : Opponent;
-				_window.PrintBoard(leftPlayer.Board, rightPlayer.Board);
+				_outputDevice.PrintBoard(leftPlayer.Board, rightPlayer.Board);
 
 				Thread.Sleep(1000);
 			} while (wasHit);
@@ -103,20 +105,20 @@ namespace Battleship
 		}
 		private bool ShotAfterCoordDraw()
 		{
-			if (Opponent.Board[_lastX, _lastY] != (int)Marker.EmptyField)
+			if (Opponent.Board.GetField(_lastX, _lastY) != (int)Marker.EmptyField)
 			{
 				HitShip(true);
 				return true;
 			}
 			else
 			{
-				Opponent.Board[_lastX, _lastY] = (int)Marker.AlreadyShot;
+				Opponent.Board.SetField(_lastX, _lastY, (int)Marker.AlreadyShot);
 				return false;
 			}
 		}
 		private bool ShotAfertDirDraw()
 		{
-			if (Opponent.Board[_lastX, _lastY] != (int)Marker.EmptyField)
+			if (Opponent.Board.GetField(_lastX, _lastY) != (int)Marker.EmptyField)
 			{
 				HitShip(false);				
 				return true;
@@ -138,7 +140,7 @@ namespace Battleship
 					_sameDirection = false;
 					_chosenDir[_dirOfShooting] = true;
 				}
-				Opponent.Board[_lastX, _lastY] = (int)Marker.AlreadyShot;
+				Opponent.Board.SetField(_lastX, _lastY, (int)Marker.AlreadyShot);
 				_lastX = _x;
 				_lastY = _y;
 				return false;
@@ -175,7 +177,7 @@ namespace Battleship
 					} while (_chosenDir[_dirOfShooting]);
 				}
 				isOutsideBoard = GoTowards();
-				if (Opponent.Board[_lastX, _lastY] > (int)Marker.LastShip || isOutsideBoard)
+				if (Opponent.Board.GetField(_lastX, _lastY) > (int)Marker.LastShip || isOutsideBoard)
 				{
 					_lastX = _x;
 					_lastY = _y;
@@ -227,7 +229,7 @@ namespace Battleship
 		}
 		private void HitShip(bool isAfterDraw)
 		{
-			int numbOfHitShip = Opponent.Board[_lastX, _lastY];
+			int numbOfHitShip = Opponent.Board.GetField(_lastX, _lastY);
 			if (Opponent.PlayerShips[numbOfHitShip].HitShip(_lastX, _lastY))
 			{
 				if (!isAfterDraw)

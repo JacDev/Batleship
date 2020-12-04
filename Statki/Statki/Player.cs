@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Battleship.Interfaces;
+using System;
 using System.Text;
 
 namespace Battleship
@@ -11,8 +12,8 @@ namespace Battleship
 		public BoardSide WhichBoard { get; }
 		public Player Opponent { get; set; }
 		public Ship[] PlayerShips { get; private set; }
-		public Board Board { get; set; }
-		protected readonly Window _window;
+		public IBoard Board { get; set; }
+		protected readonly IOutputDevice _outputDevice;
 		protected readonly int[] _shipSize = { 4, 3, 3, 2, 2, 2, 1, 1, 1, 1 };
 		protected int _x, _y;
 		protected Players _player;
@@ -23,14 +24,14 @@ namespace Battleship
 			PlayerShips[shipNumb] = new Ship(line, shipNumb);
 		}
 
-		public Player(BoardSide boardNum, Players player, Player opponent, Window window)
+		public Player(BoardSide boardNum, Players player, Player opponent, IOutputDevice outputDevice)
 		{
 			WhichBoard = boardNum;
 			SunkenShips = _x = _y = 0;
 			_player = player;
 			PlayerShips = new Ship[_shipSize.Length];
 			Opponent = opponent;
-			_window = window;
+			_outputDevice = outputDevice;
 			Board = new Board();
 		}
 		public bool IsPerson() //for saving game
@@ -51,7 +52,7 @@ namespace Battleship
 			for (int i = 0; i < PlayerShips[shipNumber].Size; ++i)
 			{
 				Tuple<int, int> shipCoord = PlayerShips[shipNumber][i];
-				Board[shipCoord.Item1, shipCoord.Item2] = shipNumber + 10 * PlayerShips[shipNumber].GetFieldMark(i);
+				Board.SetField(shipCoord.Item1, shipCoord.Item2, shipNumber + 10 * PlayerShips[shipNumber].GetFieldMark(i));
 			}
 		}
 		virtual public void MarkShipNeighborhood(bool isSink, int shipNumber)
@@ -63,7 +64,7 @@ namespace Battleship
 				for (int j = -1; j < 2; ++j)
 				{
 					for (int k = -1; k < 2; ++k)
-						Board.SetAreaIf(shipCoord.Item1 + k, shipCoord.Item2 + j, mark, (int)Marker.EmptyField);
+						Board.SetFieldIf(shipCoord.Item1 + k, shipCoord.Item2 + j, mark, (int)Marker.EmptyField);
 				}
 			}
 		}

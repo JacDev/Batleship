@@ -1,4 +1,5 @@
-﻿using Battleship.Logger;
+﻿using Battleship.Interfaces;
+using Battleship.Logger;
 using System;
 
 namespace Battleship
@@ -9,12 +10,17 @@ namespace Battleship
 		{
 			LanguageOptions languageOptions = new LanguageOptions();
 			languageOptions.LoadLanguages();
-			Window appWindow = new Window(languageOptions);
+
+			ILoggerService logger = new LoggerService();
+			IInputDevice inputDevice = new KeyboardReader();
+			IOutputDevice appWindow = new Window(languageOptions, logger, inputDevice);
 
 
 			int option = appWindow.ChoseLanguage();
+
 			languageOptions.LoadOptions(languageOptions.AvailableLanguages.Languages[option]);
-			new Game(languageOptions.ChosenLanguage, appWindow);
+
+			new Game(languageOptions.ChosenLanguage, appWindow, inputDevice);
 		}
 	}
 }
