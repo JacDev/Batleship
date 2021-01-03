@@ -25,7 +25,7 @@ Kolejne akcje gry polegają na wymianie strzałów pomiędzy graczami:
 
 ![Image of Yaktocat](https://github.com/JacDev/Battleship/blob/master/BattleShip/BattleShip/Readme%20images/strza%C5%82.png)
 
-Jeśli gracz trafi statek komputera, to przysłuhuje mu kolejny ruch, a trafione pole jest odpowiednio oznaczane:
+Jeśli gracz trafi statek komputera, to przysługuje mu kolejny ruch, a trafione pole jest odpowiednio oznaczane:
 
 ![Image of Yaktocat](https://github.com/JacDev/Battleship/blob/master/BattleShip/BattleShip/Readme%20images/trafionystatekpng.png)
 
