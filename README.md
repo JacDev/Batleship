@@ -55,4 +55,4 @@ w których będzie się poruszał od trafionego pola. Następnie dostępne są n
 Gracz, który pierwszy zatopi wszystkie statki prszeciwnika wygrywa:
 <br>
 
-![Image of Yaktocat](https://github.com/JacDev/Battleship/blob/master/BattleShip/BattleShip/Readme%20images/WinGame.png)
+![Image of Yaktocat](https://github.com/JacDev/Battleship/blob/master/Battleship/Battleship/Readme%20images/WinGame.png)
