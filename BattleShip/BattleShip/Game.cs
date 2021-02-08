@@ -92,7 +92,6 @@ namespace Battleship
 			{
 				Player currentPlayer = _whoseTurn == BoardSide.Left ? _leftPlayer : _rightPlayer;
 				Actions currentPlayerAction = currentPlayer.Shoot();
-				_leftPlayer.SunkenShips = 9;
 				if (currentPlayerAction == Actions.EndGame)
 				{
 					winer = currentPlayer;
