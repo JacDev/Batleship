@@ -13,7 +13,7 @@ Jeśli jest jakaś zapisana gra, to można ją wczytać:
 
 ![Image of Yaktocat](https://github.com/JacDev/Battleship/blob/master/BattleShip/BattleShip/Readme%20images/menugry.png)
 
-Kolejnym etapem gry jest ustawienie przez gracza statków na planszy:
+Na początku gry użytkownik ustawia statki na planszy:
 
 ![Image of Yaktocat](https://github.com/JacDev/Battleship/blob/master/BattleShip/BattleShip/Readme%20images/dodawaniestatk%C3%B3w1.png)
 
@@ -52,3 +52,7 @@ w których będzie się poruszał od trafionego pola. Następnie dostępne są n
 </div>
 
 
+Gracz, który pierwszy zatopi wszystkie statki prszeciwnika wygrywa:
+<br>
+
+![Image of Yaktocat](https://github.com/JacDev/Battleship/blob/master/BattleShip/BattleShip/Readme%20images/WinGame.png)
